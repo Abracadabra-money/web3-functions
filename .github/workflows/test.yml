@@ -2,6 +2,11 @@ name: Test Package
 
 on: [push]
 
+env:
+  PROVIDER_URL: https://eth-rpc.gateway.pokt.network
+  ARBITRUM_PROVIDER_URL: https://1rpc.io/arb
+  OPTIMISM_PROVIDER_URL: https://endpoints.omniatech.io/v1/op/mainnet/public
+
 jobs:
   test:
     runs-on: ubuntu-latest
