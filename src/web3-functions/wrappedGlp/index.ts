@@ -12,9 +12,9 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
   const timeNowSec = gelatoArgs.blockTime
 
   const execAddress = (userArgs.execAddress as string) ?? "0xf9cE23237B25E81963b500781FA15d6D38A0DE62";
-  let intervalInSeconds = userArgs.intervalInSeconds ?? 86400; // 1h
+  let intervalInSeconds = userArgs.intervalInSeconds as number ?? 86400; // 1h
   const zeroExApiBaseUrl = userArgs.zeroExApiBaseUrl ?? "https://arbitrum.api.0x.org";
-  const rewardSwappingSlippageInBips = userArgs.rewardSwappingSlippageInBips ?? 100;
+  const rewardSwappingSlippageInBips = userArgs.rewardSwappingSlippageInBips as number ?? 100;
 
   if (gelatoArgs.chainId == 0) {
     intervalInSeconds = 0;

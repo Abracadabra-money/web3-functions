@@ -12,13 +12,13 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
 
   const execAddress = userArgs.execAddress as string ?? "0x762d06bB0E45f5ACaEEA716336142a39376E596E";
   const zeroExApiBaseUrl = userArgs.zeroExApiBaseUrl ?? "https://api.0x.org";
-  let intervalInSeconds = userArgs.intervalInSeconds ?? 86400;
+  let intervalInSeconds = userArgs.intervalInSeconds as number ?? 86400;
   const strategy = userArgs.strategy as string ?? "0x1EdC13C5FC1C6e0731AE4fC1Bc4Cd6570bBc755C";
   const rewardSwappingSlippageInBips =
-    userArgs.rewardSwappingSlippageInBips as string ?? 200;
+    userArgs.rewardSwappingSlippageInBips as number ?? 200;
   const maxBentoBoxAmountIncreaseInBips =
-    userArgs.maxBentoBoxAmountIncreaseInBips ?? 1;
-  const maxBentoBoxChangeAmountInBips = userArgs.maxBentoBoxChangeAmountInBips ?? 1000;
+    userArgs.maxBentoBoxAmountIncreaseInBips as number ?? 1;
+  const maxBentoBoxChangeAmountInBips = userArgs.maxBentoBoxChangeAmountInBips as number ?? 1000;
 
   if (gelatoArgs.chainId == 0) {
     intervalInSeconds = 0;
@@ -72,7 +72,7 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
     return { canExec: false, message: `Rpc call failed` };
   }
 
-  
+
   // Check if it's ready for a new update
   const timestamp = gelatoArgs.blockTime;
   console.log(`Next update: ${lastUpdated + intervalInSeconds}`);

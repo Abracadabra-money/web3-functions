@@ -1,5 +1,19 @@
-# Web3 Functions Template  <!-- omit in toc -->
-Use this template to write, test and deploy Web3 Functions.
+# Abracadabra.money Gelato Web Functions  <!-- omit in toc -->
+
+Installation
+```
+yarn 
+```
+
+Running all tests
+```
+yarn test
+```
+
+or a specific web3 function
+```
+yarn test:magicglp
+```
 
 ## What are Web3 Functions? 
 Web3 Functions are decentralized cloud functions that work similarly to AWS Lambda or Google Cloud, just for web3. They enable developers to execute on-chain transactions based on arbitrary off-chain data (APIs / subgraphs, etc) & computation. These functions are written in Typescript, stored on IPFS and run by Gelato. 
