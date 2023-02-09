@@ -3,7 +3,6 @@ import {
   Web3FunctionContext,
 } from "@gelatonetwork/web3-functions-sdk";
 import { BigNumber, Contract } from "ethers";
-import ky from "ky"; // we recommend using ky as axios doesn't support fetch by default
 
 const HARVESTER_ABI = [
   "function lastExecution() external view returns(uint256)",
@@ -20,10 +19,14 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
 
   // Retrieve Last oracle update time
   const execAddress = (userArgs.execAddress as string) ?? "0x588d402C868aDD9053f8F0098c2DC3443c991d17";
-  const interval = userArgs.interval ?? 46200 // 1h
+  let intervalInSeconds = userArgs.intervalInSeconds ?? 46200 // 1h
   const lensAddress = (userArgs.lensAddress as string) ?? "0x66499d9Faf67Dc1AC1B814E310e8ca97f1bc1f1a";
   const rewardToken = userArgs.rewardToken as string ?? "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1";
   const mintGlpSlippageInBips = userArgs.mintGlpSlippageInBips ?? 100;
+
+  if (gelatoArgs.chainId == 0) {
+    intervalInSeconds = 0;
+  }
 
   const BIPS = 10_000;
 
@@ -40,8 +43,8 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
 
   // Check if it's ready for a new update
   const timestamp = gelatoArgs.blockTime;
-  console.log(`Next oracle update: ${lastUpdated + interval}`);
-  if (timestamp < lastUpdated + interval) {
+  console.log(`Next oracle update: ${lastUpdated + intervalInSeconds}`);
+  if (timestamp < lastUpdated + intervalInSeconds) {
     return { canExec: false, message: `Time not elapsed` };
   }
 

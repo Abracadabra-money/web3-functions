@@ -1,0 +1,16 @@
+{
+  "web3FunctionVersion": "1.0.0",
+  "runtime": "js-1.0",
+  "memory": 128, 
+  "timeout": 30,
+  "userArgs": {
+    "execAddress": "string",
+    "zeroExApiBaseUrl":"string",
+    "intervalInSeconds": "number",
+    "rewardSwappingSlippageInBips": "number",
+    "strategy": "string",
+    "maxBentoBoxAmountIncreaseInBips": "number",
+    "maxBentoBoxChangeAmountInBips": "number",
+    "rewardTokensCommaSeparated":"number"
+  }
+}
