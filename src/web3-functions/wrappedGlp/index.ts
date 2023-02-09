@@ -1,4 +1,4 @@
-import { BigNumber, Contract, ethers, providers } from "ethers";
+import { BigNumber, Contract } from "ethers";
 import { Interface } from "ethers/lib/utils";
 import {
   Web3Function,
@@ -8,18 +8,18 @@ import {
 import ky from "ky";
 
 Web3Function.onRun(async (context: Web3FunctionContext) => {
-  const { userArgs, gelatoArgs, provider} = context;
+  const { userArgs, gelatoArgs, provider } = context;
   const timeNowSec = gelatoArgs.blockTime
 
   const execAddress = (userArgs.execAddress as string) ?? "0xf9cE23237B25E81963b500781FA15d6D38A0DE62";
-  let intervalInSeconds = userArgs.intervalInSeconds as number ?? 86400; // 1h
+  let intervalInSeconds = userArgs.intervalInSeconds as number ?? 86400;
   const zeroExApiBaseUrl = userArgs.zeroExApiBaseUrl ?? "https://arbitrum.api.0x.org";
   const rewardSwappingSlippageInBips = userArgs.rewardSwappingSlippageInBips as number ?? 100;
 
   if (gelatoArgs.chainId == 0) {
     intervalInSeconds = 0;
   }
-  
+
   const timeNowSecBig = BigNumber.from(+timeNowSec.toFixed(0));
 
   const BIPS = 10_000;

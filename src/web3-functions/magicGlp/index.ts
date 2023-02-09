@@ -19,7 +19,7 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
 
   // Retrieve Last oracle update time
   const execAddress = (userArgs.execAddress as string) ?? "0x588d402C868aDD9053f8F0098c2DC3443c991d17";
-  let intervalInSeconds = userArgs.intervalInSeconds ?? 46200 // 1h
+  let intervalInSeconds = userArgs.intervalInSeconds ?? 46200;
   const lensAddress = (userArgs.lensAddress as string) ?? "0x66499d9Faf67Dc1AC1B814E310e8ca97f1bc1f1a";
   const rewardToken = userArgs.rewardToken as string ?? "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1";
   const mintGlpSlippageInBips = userArgs.mintGlpSlippageInBips as number ?? 100;
