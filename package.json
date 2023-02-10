@@ -10,12 +10,13 @@
     "format:check": "prettier --check '*/**/*.{js,json,md,ts}'",
     "lint": "eslint --cache .",
     "test:magicglp": "dotenv cross-var \"PROVIDER_URL=%ARBITRUM_PROVIDER_URL% w3f test src/web3-functions/magicGlp/index.ts --show-logs --chain-id=0\"",
+    "test:spellswapper": "dotenv cross-var \"PROVIDER_URL=%MAINNET_PROVIDER_URL% w3f test src/web3-functions/spell_swapper/index.ts --show-logs --chain-id=1\"",
     "test:magicape": "dotenv cross-var \"w3f test src/web3-functions/magicApe/index.ts --show-logs --chain-id=0\"",
     "test:wrappedglp": "dotenv cross-var \"PROVIDER_URL=%ARBITRUM_PROVIDER_URL%  w3f test src/web3-functions/wrappedGlp/index.ts --show-logs --chain-id=0\"",
     "test:lusd": "dotenv cross-var \"w3f test src/web3-functions/lusd/index.ts --show-logs --chain-id=0\"",
     "test:vopusdc": "dotenv cross-var \"PROVIDER_URL=%OPTIMISM_PROVIDER_URL% w3f test src/web3-functions/vop_usdc/index.ts --show-logs --chain-id=0\"",
 
-    "test": "yarn run test:magicglp && yarn run test:wrappedglp && yarn run test:lusd && yarn run test:vopusdc && yarn run test:magicape"
+    "test": "yarn run test:magicglp && yarn run test:wrappedglp && yarn run test:lusd && yarn run test:vopusdc && yarn run test:magicape && yarn run test:spellswapper"
   },
   "keywords": [],
   "author": "",

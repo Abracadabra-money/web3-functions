@@ -7,15 +7,16 @@ import { BigNumber, Contract } from "ethers";
 const HARVESTER_ABI = [
   "function lastExecution() external view returns(uint256)",
   "function claimable() external view returns(uint256)",
-  "function run() external"
+  "function run() external",
 ];
-
 
 Web3Function.onRun(async (context: Web3FunctionContext) => {
   const { userArgs, gelatoArgs, provider } = context;
 
   // Retrieve Last oracle update time
-  const execAddress = (userArgs.execAddress as string) ?? "0x5226d847cAdABB7FcBd6c2a8568C58a6e10465bf";
+  const execAddress =
+    (userArgs.execAddress as string) ??
+    "0x5226d847cAdABB7FcBd6c2a8568C58a6e10465bf";
   let intervalInSeconds = userArgs.intervalInSeconds ?? 86400;
 
   if (gelatoArgs.chainId == 0) {
@@ -50,7 +51,10 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
   }
 
   if (rewardTokenBalance.gt(0)) {
-    return { canExec: true, callData: harvester.interface.encodeFunctionData("run", []) };
+    return {
+      canExec: true,
+      callData: harvester.interface.encodeFunctionData("run", []),
+    };
   }
   return { canExec: false, message: "Nothing to harvest" };
 });

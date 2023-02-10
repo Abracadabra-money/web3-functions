@@ -10,22 +10,28 @@ import ky from "ky";
 Web3Function.onRun(async (context: Web3FunctionContext) => {
   const { userArgs, gelatoArgs, provider } = context;
 
-  const execAddress = userArgs.execAddress as string ?? "0x762d06bB0E45f5ACaEEA716336142a39376E596E";
+  const execAddress =
+    (userArgs.execAddress as string) ??
+    "0x762d06bB0E45f5ACaEEA716336142a39376E596E";
   const zeroExApiBaseUrl = userArgs.zeroExApiBaseUrl ?? "https://api.0x.org";
-  let intervalInSeconds = userArgs.intervalInSeconds as number ?? 86400;
-  const strategy = userArgs.strategy as string ?? "0x1EdC13C5FC1C6e0731AE4fC1Bc4Cd6570bBc755C";
+  let intervalInSeconds = (userArgs.intervalInSeconds as number) ?? 86400;
+  const strategy =
+    (userArgs.strategy as string) ??
+    "0x1EdC13C5FC1C6e0731AE4fC1Bc4Cd6570bBc755C";
   const rewardSwappingSlippageInBips =
-    userArgs.rewardSwappingSlippageInBips as number ?? 200;
+    (userArgs.rewardSwappingSlippageInBips as number) ?? 200;
   const maxBentoBoxAmountIncreaseInBips =
-    userArgs.maxBentoBoxAmountIncreaseInBips as number ?? 1;
-  const maxBentoBoxChangeAmountInBips = userArgs.maxBentoBoxChangeAmountInBips as number ?? 1000;
+    (userArgs.maxBentoBoxAmountIncreaseInBips as number) ?? 1;
+  const maxBentoBoxChangeAmountInBips =
+    (userArgs.maxBentoBoxChangeAmountInBips as number) ?? 1000;
 
   if (gelatoArgs.chainId == 0) {
     intervalInSeconds = 0;
   }
 
   if (!userArgs.rewardTokensCommaSeparated) {
-    userArgs.rewardTokensCommaSeparated = "ETH,0x6DEA81C8171D0bA574754EF6F8b412F2Ed88c54D";
+    userArgs.rewardTokensCommaSeparated =
+      "ETH,0x6DEA81C8171D0bA574754EF6F8b412F2Ed88c54D";
   }
 
   const rewardTokens = (userArgs.rewardTokensCommaSeparated as string).split(
@@ -38,7 +44,9 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
 
   // contracts
   const execAbi = ["function lastExecution() external view returns(uint256)"];
-  const strategyAbi = ["function strategyToken() external view returns(address)"];
+  const strategyAbi = [
+    "function strategyToken() external view returns(address)",
+  ];
   const stabilityPoolAbi = [
     "function getDepositorETHGain(address) external view returns(uint256)",
     "function getDepositorLQTYGain(address) external view returns(uint256)",
@@ -71,7 +79,6 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
     console.error(err);
     return { canExec: false, message: `Rpc call failed` };
   }
-
 
   // Check if it's ready for a new update
   const timestamp = gelatoArgs.blockTime;

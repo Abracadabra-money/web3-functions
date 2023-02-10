@@ -5,28 +5,39 @@ import {
   Web3FunctionContext,
 } from "@gelatonetwork/web3-functions-sdk";
 
-
 Web3Function.onRun(async (context: Web3FunctionContext) => {
   const { userArgs, gelatoArgs, provider } = context;
 
-  const execAddress = userArgs.execAddress as string ?? "0x7E05363E225c1c8096b1cd233B59457104B84908";
-  let intervalInSeconds = userArgs.intervalInSeconds as number ?? 43200;
-  const wrapper = userArgs.wrapper as string ?? "0x6eb1709e0b562097bf1cc48bc6a378446c297c04";
+  const execAddress =
+    (userArgs.execAddress as string) ??
+    "0x7E05363E225c1c8096b1cd233B59457104B84908";
+  let intervalInSeconds = (userArgs.intervalInSeconds as number) ?? 43200;
+  const wrapper =
+    (userArgs.wrapper as string) ??
+    "0x6eb1709e0b562097bf1cc48bc6a378446c297c04";
 
-  const pair = userArgs.pair as string ?? "0x47029bc8f5cbe3b464004e87ef9c9419a48018cd";
-  const router = userArgs.router as string ?? "0xa132DAB612dB5cB9fC9Ac426A0Cc215A3423F9c9";
-  const factory = userArgs.factory as string ?? "0x25CbdDb98b35ab1FF77413456B31EC81A6B6B746";
+  const pair =
+    (userArgs.pair as string) ?? "0x47029bc8f5cbe3b464004e87ef9c9419a48018cd";
+  const router =
+    (userArgs.router as string) ?? "0xa132DAB612dB5cB9fC9Ac426A0Cc215A3423F9c9";
+  const factory =
+    (userArgs.factory as string) ??
+    "0x25CbdDb98b35ab1FF77413456B31EC81A6B6B746";
   const wrapperRewardQuoteSlippageBips =
-    userArgs.wrapperRewardQuoteSlippageBips as number ?? 100;
+    (userArgs.wrapperRewardQuoteSlippageBips as number) ?? 100;
   const strategyRewardQuoteSlippageBips =
-    userArgs.strategyRewardQuoteSlippageBips as number ?? 100;
+    (userArgs.strategyRewardQuoteSlippageBips as number) ?? 100;
 
-  const strategy = userArgs.strategy as string ?? "0xa3372cd2178c52fdcb1f6e4c4e93014b4db3b20d";
-  const strategyLens = userArgs.strategyLens as string ?? "0x8BEE5Db2315Df7868295c531B36BaA53439cf528";
+  const strategy =
+    (userArgs.strategy as string) ??
+    "0xa3372cd2178c52fdcb1f6e4c4e93014b4db3b20d";
+  const strategyLens =
+    (userArgs.strategyLens as string) ??
+    "0x8BEE5Db2315Df7868295c531B36BaA53439cf528";
   const maxBentoBoxAmountIncreaseInBips =
-    userArgs.maxBentoBoxAmountIncreaseInBips as number ?? 1;
+    (userArgs.maxBentoBoxAmountIncreaseInBips as number) ?? 1;
   const maxBentoBoxChangeAmountInBips =
-    userArgs.maxBentoBoxChangeAmountInBips as number ?? 1000;
+    (userArgs.maxBentoBoxChangeAmountInBips as number) ?? 1000;
 
   if (gelatoArgs.chainId == 0) {
     intervalInSeconds = 0;
@@ -93,54 +104,49 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
 
   let request;
   try {
-    request =
-      (await strategyLensContract.quoteSolidlyWrapperHarvestAmountOut(
+    request = (
+      await strategyLensContract.quoteSolidlyWrapperHarvestAmountOut(
         wrapper,
         router,
         fee
-      )).toString();
+      )
+    ).toString();
   } catch (error) {
-    request = "0"
+    request = "0";
   }
 
-  if (!request)
-    throw Error("quoteSolidlyWrapperHarvestAmountOut call failed");
+  if (!request) throw Error("quoteSolidlyWrapperHarvestAmountOut call failed");
 
   let minLpOutFromWrapperRewards = BigNumber.from(request);
   if (minLpOutFromWrapperRewards.gt(0)) {
     minLpOutFromWrapperRewards = minLpOutFromWrapperRewards.sub(
-      minLpOutFromWrapperRewards
-        .mul(wrapperRewardQuoteSlippageBips)
-        .div(10_000)
+      minLpOutFromWrapperRewards.mul(wrapperRewardQuoteSlippageBips).div(10_000)
     );
 
     callee[0] = wrapper;
     const iface = new Interface([
       "function harvest(uint256) external returns (uint256)",
     ]);
-    data[0] = iface.encodeFunctionData("harvest", [
-      minLpOutFromWrapperRewards,
-    ]);
+    data[0] = iface.encodeFunctionData("harvest", [minLpOutFromWrapperRewards]);
     logInfo(
       `minLpOutFromWrapperRewards: ${minLpOutFromWrapperRewards.toString()}`
     );
   }
   try {
-    request =
-      (await strategyLensContract.quoteSolidlyGaugeVolatileStrategySwapToLPAmount(
+    request = (
+      await strategyLensContract.quoteSolidlyGaugeVolatileStrategySwapToLPAmount(
         strategy,
         pair,
         router,
         fee
-      )).toString();
+      )
+    ).toString();
   } catch (error) {
     request = "0";
   }
 
   if (!request)
-    throw Error(
-      "quoteSolidlyGaugeVolatileStrategySwapToLPAmount call failed"
-    );
+    throw Error("quoteSolidlyGaugeVolatileStrategySwapToLPAmount call failed");
 
   let minLpOutFromStrategyRewards = BigNumber.from(request);
 
@@ -185,8 +191,7 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
   }
 
   return { canExec: false, message: "Cannot execute" };
-}
-);
+});
 
 function logInfo(msg: string): void {
   console.info(msg);
