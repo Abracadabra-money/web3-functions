@@ -1,0 +1,6 @@
+# Deployments
+
+SpellSwapper: QmYkPtCuQ11RHZzSC5QKRcjULN8JPdL9bJci2NdTZ3sgoe
+MagicApe: QmRjFz1NB1mTFpDPF8vVuCUQPKzqwwgDfAGFeqjvJjVCn3 [task](https://beta.app.gelato.network/task/0x3dad2bfbb40b85778cb92d62035e8eded702b3e83db02539d5a1e4f46b7f0206?chainId=1)
+MagicGlp: QmVAezxeFwGsnP8GUnZPe93z5y13CjjaN3nHF935FZX4DF
+Wrapped GLP: QmZiThf85cGeTsL7dBxBW5EaucbUGuWa1QPxmnU36UdJDE [task](https://beta.app.gelato.network/task/0x7b689ce2ec1c34ad394f39d895a185725945a52d3d6294cda05242c362c043a8?chainId=42161)

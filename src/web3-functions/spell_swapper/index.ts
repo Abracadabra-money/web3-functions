@@ -116,6 +116,9 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
   try {
     mim = new Contract(fromTokenAddress, TOKEN_ABI, provider);
     const fromTokenAmountBN = await mim.balanceOf(execAddress);
+    if (fromTokenAmountBN.lt(utils.parseEther("100"))) {
+      return { canExec: false, message: `not enough mim` };
+    }
     fromTokenAmount =
       fromTokenAmountBN <= utils.parseEther("50000")
         ? fromTokenAmountBN.toString()

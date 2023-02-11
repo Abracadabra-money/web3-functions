@@ -21,7 +21,7 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
   const execAddress =
     (userArgs.execAddress as string) ??
     "0x588d402C868aDD9053f8F0098c2DC3443c991d17";
-  let intervalInSeconds = userArgs.intervalInSeconds ?? 46200;
+  const intervalInSeconds = userArgs.intervalInSeconds ?? 46200;
   const lensAddress =
     (userArgs.lensAddress as string) ??
     "0x66499d9Faf67Dc1AC1B814E310e8ca97f1bc1f1a";
@@ -30,10 +30,6 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
     "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1";
   const mintGlpSlippageInBips =
     (userArgs.mintGlpSlippageInBips as number) ?? 100;
-
-  if (gelatoArgs.chainId == 0) {
-    intervalInSeconds = 0;
-  }
 
   const BIPS = 10_000;
 
@@ -50,8 +46,10 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
 
   // Check if it's ready for a new update
   const timestamp = gelatoArgs.blockTime;
-  console.log(`Next oracle update: ${lastUpdated + intervalInSeconds}`);
-  if (timestamp < lastUpdated + intervalInSeconds) {
+  const nextUpdate = lastUpdated + intervalInSeconds
+  console.log(`Next oracle update: ${nextUpdate}`);
+  
+  if (timestamp < nextUpdate) {
     return { canExec: false, message: `Time not elapsed` };
   }
 
