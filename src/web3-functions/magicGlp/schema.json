@@ -7,7 +7,6 @@
     "execAddress": "string",
     "lensAddress": "string",
     "rewardToken": "string",
-    "intervalInSeconds": "number",
     "mintGlpSlippageInBips": "number"
   }
 }

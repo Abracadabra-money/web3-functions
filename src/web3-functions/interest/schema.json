@@ -5,15 +5,10 @@
   "timeout": 30,
   "userArgs": {
     "execAddress": "string",
+    "zeroExApiBaseUrl": "string",
     "intervalInSeconds": "number",
+    "rewardSwappingSlippageInBips": "number",
     "strategy": "string",
-    "strategyLens": "string",
-    "wrapper": "string",
-    "pair": "string",
-    "router": "string",
-    "factory": "string",
-    "wrapperRewardQuoteSlippageBips": "number",
-    "strategyRewardQuoteSlippageBips": "number",
     "maxBentoBoxAmountIncreaseInBips": "number",
     "maxBentoBoxChangeAmountInBips": "number"
   }

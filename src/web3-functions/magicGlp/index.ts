@@ -15,13 +15,13 @@ const LENS_ABI = [
 ];
 
 Web3Function.onRun(async (context: Web3FunctionContext) => {
-  const { userArgs, gelatoArgs, provider } = context;
+  const { userArgs, gelatoArgs, storage, provider } = context;
 
   // Retrieve Last oracle update time
   const execAddress =
     (userArgs.execAddress as string) ??
     "0x588d402C868aDD9053f8F0098c2DC3443c991d17";
-  const intervalInSeconds = userArgs.intervalInSeconds ?? 46200;
+  const intervalInSeconds = 3600;
   const lensAddress =
     (userArgs.lensAddress as string) ??
     "0x66499d9Faf67Dc1AC1B814E310e8ca97f1bc1f1a";
@@ -34,21 +34,16 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
   const BIPS = 10_000;
 
   let lastUpdated;
-  let harvester;
+  const harvester = new Contract(execAddress, HARVESTER_ABI, provider);
 
-  try {
-    harvester = new Contract(execAddress, HARVESTER_ABI, provider);
-    lastUpdated = parseInt(await harvester.lastExecution());
-    console.log(`Last harvester update: ${lastUpdated}`);
-  } catch (err) {
-    return { canExec: false, message: `Rpc call failed` };
-  }
+  const lastTimestampStr = (await storage.get("lastTimestamp")) ?? "0";
+  const lastTimestamp = parseInt(lastTimestampStr);
 
   // Check if it's ready for a new update
   const timestamp = gelatoArgs.blockTime;
-  const nextUpdate = lastUpdated + intervalInSeconds
+  const nextUpdate = lastTimestamp + intervalInSeconds
   console.log(`Next oracle update: ${nextUpdate}`);
-  
+
   if (timestamp < nextUpdate) {
     return { canExec: false, message: `Time not elapsed` };
   }
@@ -78,6 +73,8 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
     const minAmountOut = mintGlpAmount.sub(
       mintGlpAmount.mul(mintGlpSlippageInBips).div(BIPS)
     );
+
+    await storage.set("lastTimestamp", timestamp.toString());
 
     return {
       canExec: true,
