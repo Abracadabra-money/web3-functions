@@ -39,7 +39,7 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
   const maxBentoBoxChangeAmountInBips =
     (userArgs.maxBentoBoxChangeAmountInBips as number) ?? 1000;
 
-  if (gelatoArgs.chainId == 0) {
+  if (gelatoArgs.chainId == 9999999) {
     intervalInSeconds = 0;
   }
 

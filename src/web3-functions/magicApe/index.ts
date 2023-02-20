@@ -16,10 +16,10 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
   // Retrieve Last oracle update time
   const execAddress =
     (userArgs.execAddress as string) ??
-    "0x5226d847cAdABB7FcBd6c2a8568C58a6e10465bf";
+    "0x598330D0F504297f53799e37CfF80ed564eB3525";
   let intervalInSeconds = userArgs.intervalInSeconds ?? 86400;
 
-  if (gelatoArgs.chainId == 0) {
+  if (gelatoArgs.chainId == 9999999) {
     intervalInSeconds = 0;
   }
 
