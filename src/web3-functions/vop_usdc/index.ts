@@ -187,7 +187,7 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
       true,
     ]);
 
-    return { canExec: false, callData, message: "Ready to execute" };
+    return { canExec: true, callData, message: "Ready to execute" };
   }
 
   return { canExec: false, message: "Cannot execute" };
