@@ -14,10 +14,11 @@ const LENS_ABI = [
 Web3Function.onRun(async (context: Web3FunctionContext) => {
   const { userArgs, gelatoArgs, storage, provider } = context;
 
-  const execAddress =
-    (userArgs.execAddress as string) ?? "0x762d06bB0E45f5ACaEEA716336142a39376E596E";
   const zeroExApiBaseUrl = userArgs.zeroExApiBaseUrl ?? "https://api.0x.org";
   let intervalInSeconds = (userArgs.intervalInSeconds as number) ?? 86400;
+
+  // WBTC strat: 0x186d76147A226A51a112Bb1958e8b755ab9FD1aF
+  // WETH strat: 0xcc0d7aF1f809dD3A589756Bba36Be04D19e9C6c5
   const strategy =
     (userArgs.strategy as string) ??
     "0xcc0d7aF1f809dD3A589756Bba36Be04D19e9C6c5";
@@ -29,23 +30,19 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
     (userArgs.maxBentoBoxChangeAmountInBips as number) ?? 1000;
   const lens = "0xfd2387105ee3ccb0d96b7de2d86d26344f17787b";
 
-  if (gelatoArgs.chainId == 0) {
+  if (gelatoArgs.chainId == 9999999) {
     intervalInSeconds = 0;
   }
-  
+
   const BIPS = 10_000;
 
   // contracts
-  const execAbi = ["function lastExecution() external view returns(uint256)"];
   const strategyAbi = [
     "function strategyToken() external view returns(address)",
     "function pendingFeeEarned() external view returns(uint128)"
   ];
-  const rewardTokenAbi = [
-    "function balanceOf(address) external view returns(uint256)",
-  ];
 
-  const execContract = new Contract(execAddress, execAbi, provider);
+  const mim = "0x99D8a9C45b2ecA8864373A26D1459e3Dff1e17F3";
   const strategyContract = new Contract(strategy, strategyAbi, provider);
   const lensContract = new Contract(lens, LENS_ABI, provider);
 
@@ -73,11 +70,11 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
 
   totalPendingFees = totalPendingFees.add(BigNumber.from(response));
 
-  let swapData = new Array<string>(1);
+  const swapData = new Array<string>(1);
   swapData[0] = "0x0000000000000000000000000000000000000000"
 
   if (totalPendingFees.gt(BigNumber.from(0))) {
-    const quoteApi = `${zeroExApiBaseUrl}/swap/v1/quote?buyToken=0x99D8a9C45b2ecA8864373A26D1459e3Dff1e17F3&sellToken=${String(strategyToken)}&sellAmount=${totalPendingFees.toString()}`;
+    const quoteApi = `${zeroExApiBaseUrl}/swap/v1/quote?buyToken=${mim}&sellToken=${String(strategyToken)}&sellAmount=${totalPendingFees.toString()}`;
     const quoteApiRes: any = await ky.get(quoteApi).json();
 
     if (!quoteApiRes) throw Error("Get quote api failed");
@@ -98,11 +95,11 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
     console.log(minAmountOut)
 
     const iface = new Interface([
-      "function swapRewards(uint256,address,bytes) external returns (uint256 amountOut)",
+      "function swapAndwithdrawFees(uint256,address,bytes) external returns (uint256 amountOut)",
     ]);
-    swapData[0] = iface.encodeFunctionData("swapRewards", [
+    swapData[0] = iface.encodeFunctionData("swapAndwithdrawFees", [
       minAmountOut.toString(),
-      strategyToken,
+      mim,
       data,
     ]);
   }
@@ -116,10 +113,17 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
     strategy,
     maxBentoBoxAmountIncreaseInBips.toString(),
     maxBentoBoxChangeAmountInBips.toString(),
-    swapData.length > 0 ? swapData : "[]", //'["' + swapData.join('", "') + '"]' : "[]",
+    swapData.length > 0 ? swapData : "[]",
   ]);
 
-  return { canExec: false, callData, message: "" };
+  if (gelatoArgs.chainId == 9999999) {
+    console.log(
+      `https://dashboard.tenderly.co/abracadabra/magic-internet-money/simulator/new?contractFunction=0xe766b1f5&value=0&contractAddress=0x762d06bB0E45f5ACaEEA716336142a39376E596E&rawFunctionInput=${callData}&network=1&from=0x4d0c7842cd6a04f8edb39883db7817160da159c3&block=&blockIndex=0&headerBlockNumber=&headerTimestamp=`
+    );
+    //console.log(callData);
+  }
+
+  return { canExec: true, callData, message: "" };
 });
 
 function logInfo(msg: string): void {
