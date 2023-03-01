@@ -15,6 +15,23 @@ or a specific web3 function
 yarn test:magicglp
 ```
 
+## Deploy your Web3Function on IPFS
+
+Use `npx w3f deploy FILENAME` command to deploy your web3 function.
+
+Example:<br/>
+`npx w3f deploy src/web3-functions/vop_usdc/index.ts`
+
+The deployer will output your Web3Function IPFS CID, that you can use to create your task:
+```
+ ✓ Web3Function deployed to ipfs.
+ ✓ CID: QmVfDbGGN6qfPs5ocu2ZuzLdBsXpu7zdfPwh14LwFUHLnc
+
+To create a task that runs your Web3 Function every minute, visit:
+> https://beta.app.gelato.network/new-task?cid=QmVfDbGGN6qfPs5ocu2ZuzLdBsXpu7zdfPwh14LwFUHLnc
+```
+
+
 ## What are Web3 Functions? 
 Web3 Functions are decentralized cloud functions that work similarly to AWS Lambda or Google Cloud, just for web3. They enable developers to execute on-chain transactions based on arbitrary off-chain data (APIs / subgraphs, etc) & computation. These functions are written in Typescript, stored on IPFS and run by Gelato. 
 
@@ -266,24 +283,6 @@ SECRETS_COINGECKO_API=https://api.coingecko.com/api/v3
 5. View complete list of your secrets by using:<br/> `yarn list-secrets`
 
 6. To delete secrets, use:<br/> `yarn delete-secrets SECRET_KEY SECRET_KEY2`
-
-  
-
-## Deploy your Web3Function on IPFS
-
-Use `npx w3f deploy FILENAME` command to deploy your web3 function.
-
-Example:<br/>
-`npx w3f deploy src/web3-functions/examples/oracle/index.ts`
-
-The deployer will output your Web3Function IPFS CID, that you can use to create your task:
-```
- ✓ Web3Function deployed to ipfs.
- ✓ CID: QmVfDbGGN6qfPs5ocu2ZuzLdBsXpu7zdfPwh14LwFUHLnc
-
-To create a task that runs your Web3 Function every minute, visit:
-> https://beta.app.gelato.network/new-task?cid=QmVfDbGGN6qfPs5ocu2ZuzLdBsXpu7zdfPwh14LwFUHLnc
-```
 
 
 ## Create your Web3Function task
