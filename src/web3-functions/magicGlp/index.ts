@@ -14,6 +14,21 @@ const LENS_ABI = [
   "function glpMintAmount(address,uint256) external view returns(uint256)",
 ];
 
+const REWARD_TOKEN_ORACLE_ABI = [
+  "function decimals() external view returns (uint8)",
+  "function latestAnswer() external view returns (int256)"
+];
+
+const MAGIC_GLP_ORACLE_ABI = [
+  "function peekSpot(bytes) external view returns (uint256)",
+  "function oracleImplementation() external view returns (address)",
+  "function magicGlp() external view returns (address)"
+];
+
+const MAGIC_GLP_ABI = [
+  "function totalSupply() external view returns (uint256)"
+];
+
 Web3Function.onRun(async (context: Web3FunctionContext) => {
   const { userArgs, gelatoArgs, storage, provider } = context;
 
@@ -30,11 +45,21 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
     "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1";
   const mintGlpSlippageInBips =
     (userArgs.mintGlpSlippageInBips as number) ?? 100;
+  const rewardTokenChainlinkAddress =
+    (userArgs.rewardTokenChainlinkAddress as string) ??
+    "0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419"; // wETH oracle
+  const magicGlpOracleAddress =
+    (userArgs.magicGlpOracleAddress as string) ??
+    "0x4ED0935ecC03D7FcEfb059e279BCD910a02F284C";
+  const maxRewardIncrementInBips =
+    (userArgs.maxRewardIncrementInBips as number) ?? 5000; // max 50% APY rewards
 
   const BIPS = 10_000;
 
   let lastUpdated;
   const harvester = new Contract(execAddress, HARVESTER_ABI, provider);
+  const rewardTokenOracle = new Contract(rewardTokenChainlinkAddress, REWARD_TOKEN_ORACLE_ABI, provider);
+  const magicGlpOracle = new Contract(magicGlpOracleAddress, MAGIC_GLP_ORACLE_ABI, provider);
 
   const lastTimestampStr = (await storage.get("lastTimestamp")) ?? "0";
   const lastTimestamp = parseInt(lastTimestampStr);
@@ -60,14 +85,21 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
   }
 
   if (rewardTokenBalance.gt(0)) {
+
     let mintGlpAmount;
     try {
+      const peekSpotPrice = await magicGlpOracle.peekSpot("0x");
+      const oracleImplementation = new Contract(await magicGlpOracle.oracleImplementation(), MAGIC_GLP_ORACLE_ABI, provider);
+      const totalSupply = await (new Contract(await oracleImplementation.magicGlp(), MAGIC_GLP_ABI, provider)).totalSupply();
+      const magicGlpTotalValue = BigNumber.from("10").pow("18").mul(totalSupply).div(peekSpotPrice);
+      console.log("magicGLP total value: ", `$${(magicGlpTotalValue.toString() as unknown as number / 1e18).toLocaleString()}`)
+
       lens = new Contract(lensAddress, LENS_ABI, provider);
       mintGlpAmount = BigNumber.from(
         await lens.glpMintAmount(rewardToken, rewardTokenBalance.toString())
       );
     } catch (err) {
-      return { canExec: false, message: `Rpc call failed` };
+      return { canExec: false, message: `Rpc call failed, details: ${err.toString()}` };
     }
 
     const minAmountOut = mintGlpAmount.sub(

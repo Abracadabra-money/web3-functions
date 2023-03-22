@@ -7,6 +7,9 @@
     "execAddress": "string",
     "lensAddress": "string",
     "rewardToken": "string",
+    "rewardTokenChainlinkAddress": "string",
+    "magicGlpOracleAddress": "string",
+    "maxRewardIncrementInBips": "number",
     "mintGlpSlippageInBips": "number"
   }
 }
