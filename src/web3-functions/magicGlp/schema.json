@@ -9,7 +9,7 @@
     "rewardToken": "string",
     "rewardTokenChainlinkAddress": "string",
     "magicGlpOracleAddress": "string",
-    "maxRewardIncrementInBips": "number",
+    "maxApyInBips": "number",
     "mintGlpSlippageInBips": "number"
   }
 }
