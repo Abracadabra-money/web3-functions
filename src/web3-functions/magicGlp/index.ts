@@ -64,20 +64,26 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
   const rewardTokenChainlinkAddress = (userArgs.rewardTokenChainlinkAddress as string) ?? DEFAULT_PARAMS_PER_CHAIN[gelatoArgs.chainId].rewardTokenChainlinkAddress;
   const magicGlpOracleAddress = (userArgs.magicGlpOracleAddress as string) ?? DEFAULT_PARAMS_PER_CHAIN[gelatoArgs.chainId].magicGlpOracle;
   const maxApyInBips = (userArgs.maxRewardIncrementInBips as number) ?? 5000; // max 50% APY rewards
+  const maxApyInBipsAsBN = BigNumber.from(maxApyInBips);
+  const secondsInOneYear = BigNumber.from("31536000");
 
   const BIPS = 10_000;
 
+  const oneE8 = BigNumber.from("100000000");
   const harvester = new Contract(execAddress, HARVESTER_ABI, provider);
   const rewardTokenOracle = new Contract(rewardTokenChainlinkAddress, REWARD_TOKEN_ORACLE_ABI, provider);
   const magicGlpOracle = new Contract(magicGlpOracleAddress, MAGIC_GLP_ORACLE_ABI, provider);
   const oracleImplementation = new Contract(await magicGlpOracle.oracleImplementation(), MAGIC_GLP_ORACLE_ABI, provider);
   const magicGlp = new Contract(await oracleImplementation.magicGlp(), MAGIC_GLP_ABI, provider);
-
-  const lastTimestampStr = (await storage.get("lastTimestamp")) ?? (await harvester.lastExecution()).toString();
-  const lastTimestamp = parseInt(lastTimestampStr);
-
-  // Check if it's ready for a new update
   const timestamp = parseInt(gelatoArgs.blockTime.toString());
+  const lastTimestampStr = (await storage.get("lastTimestamp")) ?? (await harvester.lastExecution()).toString();
+
+  let lastTimestamp = parseInt(lastTimestampStr);
+
+  if (lastTimestamp == 0 && testing) {
+    lastTimestamp = timestamp - 3600; // for testing, consider 1h has passed since the last harvest
+  }
+
   const nextUpdate = lastTimestamp + intervalInSeconds
   const considerApy = lastTimestamp > 0;
 
@@ -85,6 +91,7 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
   console.log("current timestamp", timestamp);
   console.log("last harvest timestamp", lastTimestamp);
 
+  // Check if it's ready for a new update
   if (!testing && timestamp < nextUpdate) {
     return { canExec: false, message: `Time not elapsed` };
   } else {
@@ -105,26 +112,36 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
 
     let mintGlpAmount;
     try {
-      if (considerApy) {
-        const peekSpotPrice = await magicGlpOracle.peekSpot("0x");
-        const totalSupply = await magicGlp.totalSupply();
-        const rewardPrice = await rewardTokenOracle.latestAnswer(); // assume it's 8 decimals
-        const rewardTotalValue = rewardPrice.mul(rewardTokenAmount).div(BigNumber.from("100000000")) // assume reward token is 18 decimals
-        const magicGlpTotalValue = BigNumber.from("10").pow("18").mul(totalSupply).div(peekSpotPrice);
-        const magicGlpTotalValueInFloat = magicGlpTotalValue.toString() as unknown as number / 1e18;
-        const rewardTotalValueInFloat = rewardTotalValue.toString() as unknown as number / 1e18;
-        const timeElapsed = timestamp - lastTimestamp;
-        const apyInBips = (31536000 * rewardTotalValueInFloat) / timeElapsed / magicGlpTotalValueInFloat * BIPS;
-        const effectiveApy = Math.min(apyInBips, maxApyInBips);
+      const peekSpotPrice = await magicGlpOracle.peekSpot("0x");
+      const totalSupply = await magicGlp.totalSupply();
+      const rewardPrice = await rewardTokenOracle.latestAnswer(); // assume it's 8 decimals
+      const rewardTotalValue = rewardPrice.mul(rewardTokenAmount).div(oneE8) // assume reward token is 18 decimals
+      const magicGlpTotalValue = BigNumber.from("10").pow("18").mul(totalSupply).div(peekSpotPrice);
+      const magicGlpTotalValueInFloat = magicGlpTotalValue.toString() as unknown as number / 1e18;
+      const rewardTotalValueInFloat = rewardTotalValue.toString() as unknown as number / 1e18;
+      const timeElapsed = timestamp - lastTimestamp;
 
-        console.log("reward amount", (rewardTokenAmount.toString() as unknown as number / 1e18).toLocaleString());
-        console.log("reward price: ", `$${(rewardPrice.toString() as unknown as number / 1e8).toLocaleString()}`);
-        console.log("magicGLP total value: ", `$${(magicGlpTotalValueInFloat).toLocaleString()}`);
-        console.log("reward total value: ", `$${(rewardTotalValueInFloat).toLocaleString()}`);
-        console.log(`time elapsed since last harvest: ${timeElapsed} seconds`);
-        console.log(`current apy: ${apyInBips / BIPS}`);
+      console.log("reward amount", (rewardTokenAmount.toString() as unknown as number / 1e18).toLocaleString());
+      console.log("reward price: ", `$${(rewardPrice.toString() as unknown as number / 1e8).toLocaleString()}`);
+      console.log("magicGLP total value: ", `$${(magicGlpTotalValueInFloat).toLocaleString()}`);
+      console.log("reward total value: ", `$${(rewardTotalValueInFloat).toLocaleString()}`);
+      console.log(`time elapsed since last harvest: ${timeElapsed} seconds`);
+
+      if (considerApy) {
+        const apyInBips = secondsInOneYear.mul(rewardTotalValue).mul(BigNumber.from(BIPS)).div(BigNumber.from(timeElapsed)).div(magicGlpTotalValue);
+        console.log(`current apy: ${apyInBips.toString() as unknown as number / BIPS}`);
         console.log(`max apy: ${maxApyInBips / BIPS}`);
-        console.log(`effective apy: ${effectiveApy / BIPS}`);
+
+        if (apyInBips.gt(maxApyInBipsAsBN)) {
+          console.log("apy is higher than max, using max apy");
+
+          // calculate how much reward token should represent maxApyInBips
+          rewardTokenAmount = maxApyInBipsAsBN.mul(BigNumber.from(timeElapsed)).mul(magicGlpTotalValue).mul(oneE8).div(BigNumber.from(BIPS)).div(secondsInOneYear).div(rewardPrice);
+          console.log(`adjusted reward token amount: ${rewardTokenAmount.toString() as unknown as number / 1e18}`);
+
+        }
+      } else {
+        console.log("first harvest: ignoring apy for now");
       }
 
       lens = new Contract(lensAddress, LENS_ABI, provider);
