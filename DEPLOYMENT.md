@@ -3,7 +3,8 @@
 | Name                  | CID                                            | Task                                                                                                                          |
 |-----------------------|------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------|
 | MagicApe              | QmWQbRf3qfck5Jaszw3TzmWLz4NxNCwWnxXriQ5S4uuU2E | [task](https://beta.app.gelato.network/task/0x487a71a1c0b3dc84be5bc08831f3b1d88302468837efb4fff1c55d4f73f93014?chainId=1)     |
-| MagicGlp              | QmXmKCPk3reVyj6q3FA3yyXSNeqQRCLKJAKCXf2jKZ2WLb | [task](https://beta.app.gelato.network/task/0x51c78e18c2c8f1f250876bbab6354e9f2c272372cc4f0defeeccbe632800d6c7?chainId=42161) |
+| MagicGlp Arbitrum     | QmeXtq3d3tX9MYSqoTjS2vpkEUHPtwyZGC1M7W8DZ1eTAi | [task](https://beta.app.gelato.network/task/0xfdcdb2a6b9325180d3b3fe52143a3ded6f66d21c778ada51d8b4390fe25eda78?chainId=42161) |
+| MagicGlp Avalanche    | QmeXtq3d3tX9MYSqoTjS2vpkEUHPtwyZGC1M7W8DZ1eTAi | [task](TODO) |
 | SpellSwapper          | QmYkPtCuQ11RHZzSC5QKRcjULN8JPdL9bJci2NdTZ3sgoe | [task](https://beta.app.gelato.network/task/0xc529ba3e35a93dea09b4f12f83fb0619643ec06eb2d70396cd72c782c94b3c66?chainId=1)     |
 | Velodrome vOP/USDC    | QmNRCUSoYYU74x9S97Qo7yYcFFBUgLkdQwQWBxPwPtzEDq | [task](https://beta.app.gelato.network/task/0x6d706c988387748e2a1838780b4c242df3652d320a44f82bcb7a590d7c3ea84d?chainId=10)    |
 | WBTC InterestStrategy | QmRVTDSPMSdJb1HCVydZtq31a7NftTL6QXt48aYyCMDAHZ | [task](https://beta.app.gelato.network/task/0x9379758cb85f52220f42d37a6273fd1ed48c8417504bfdba82bbb9d57bbcc6d0?chainId=1)     |

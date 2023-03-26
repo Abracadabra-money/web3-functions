@@ -33,7 +33,7 @@ const GELATO_PROXY = "0x4D0c7842cD6a04f8EDB39883Db7817160DA159C3";
 const DEFAULT_PARAMS_PER_CHAIN = {
   // Arbitrum
   42161: {
-    execAddress: "0x919Fe3564811916BB105B921158F67FD7fA02b3F", // Harvestor contract
+    execAddress: "0xc99A4863173Ef52CCB7EA05440da0e37bA39c139", // Harvestor contract
     lensAddress: "0xe121904194eb69e5b589b58edcbc5b74069787c3",
     rewardToken: "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1", // wETH
     rewardTokenChainlinkAddress: "0x639Fe6ab55C921f74e7fac1ee960C0B6293ba612", // wETH chainlink Oracle,
