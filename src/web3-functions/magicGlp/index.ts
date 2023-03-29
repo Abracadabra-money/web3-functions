@@ -103,7 +103,7 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
   try {
     rewardTokenAmount = BigNumber.from(
       await harvester.totalRewardsBalanceAfterClaiming()
-    );
+    ).add(await provider.getBalance(harvester.address));
   } catch (err) {
     return { canExec: false, message: `Rpc call failed` };
   }
