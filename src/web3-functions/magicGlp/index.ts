@@ -47,6 +47,7 @@ const DEFAULT_PARAMS_PER_CHAIN = {
     magicGlpOracle: "0x3Cc89EA432c36c8F96731765997722192202459D"
   }
 }
+
 Web3Function.onRun(async (context: Web3FunctionContext) => {
   const { userArgs, gelatoArgs, storage, provider } = context;
 
@@ -63,7 +64,7 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
   const mintGlpSlippageInBips = (userArgs.mintGlpSlippageInBips as number) ?? 100;
   const rewardTokenChainlinkAddress = (userArgs.rewardTokenChainlinkAddress as string) ?? DEFAULT_PARAMS_PER_CHAIN[gelatoArgs.chainId].rewardTokenChainlinkAddress;
   const magicGlpOracleAddress = (userArgs.magicGlpOracleAddress as string) ?? DEFAULT_PARAMS_PER_CHAIN[gelatoArgs.chainId].magicGlpOracle;
-  const maxApyInBips = (userArgs.maxRewardIncrementInBips as number) ?? 5000; // max 50% APY rewards
+  const maxApyInBips = (userArgs.maxApyInBips as number) ?? 5000; // max 50% APY rewards
   const maxApyInBipsAsBN = BigNumber.from(maxApyInBips);
   const secondsInOneYear = BigNumber.from("31536000");
 
@@ -94,7 +95,7 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
   // Check if it's ready for a new update
   if (!testing && timestamp < nextUpdate) {
     return { canExec: false, message: `Time not elapsed` };
-  } else {
+  } else if(testing) {
     console.log("Skipping timestamp check...");
   }
 

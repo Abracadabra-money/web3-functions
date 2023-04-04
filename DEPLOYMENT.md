@@ -4,7 +4,7 @@
 |-----------------------|------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------|
 | MagicApe              | QmWQbRf3qfck5Jaszw3TzmWLz4NxNCwWnxXriQ5S4uuU2E | [task](https://beta.app.gelato.network/task/0x487a71a1c0b3dc84be5bc08831f3b1d88302468837efb4fff1c55d4f73f93014?chainId=1)     |
 | MagicGlp Arbitrum     | QmRdZynfNpVQoneszxNtXU2PFTueJsqbmL55hYxtw7v5oM | [task](https://beta.app.gelato.network/task/0x46cdddc42edb01fb462cb22efd2578d22351629689b00434531df2e254665279?chainId=42161) |
-| MagicGlp Avalanche    |  | [task](TODO) |
+| MagicGlp Avalanche    | QmRdZynfNpVQoneszxNtXU2PFTueJsqbmL55hYxtw7v5oM | [task](https://beta.app.gelato.network/task/0x235c9e3eec00d4492bb8c27760b02a4abf71fe7db31cc8381469c5f0c36b475f?chainId=43114) |
 | SpellSwapper          | QmYkPtCuQ11RHZzSC5QKRcjULN8JPdL9bJci2NdTZ3sgoe | [task](https://beta.app.gelato.network/task/0xc529ba3e35a93dea09b4f12f83fb0619643ec06eb2d70396cd72c782c94b3c66?chainId=1)     |
 | Velodrome vOP/USDC    | QmNRCUSoYYU74x9S97Qo7yYcFFBUgLkdQwQWBxPwPtzEDq | [task](https://beta.app.gelato.network/task/0x6d706c988387748e2a1838780b4c242df3652d320a44f82bcb7a590d7c3ea84d?chainId=10)    |
 | WBTC InterestStrategy | QmRVTDSPMSdJb1HCVydZtq31a7NftTL6QXt48aYyCMDAHZ | [task](https://beta.app.gelato.network/task/0x9379758cb85f52220f42d37a6273fd1ed48c8417504bfdba82bbb9d57bbcc6d0?chainId=1)     |
