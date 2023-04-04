@@ -10,3 +10,6 @@
 | WBTC InterestStrategy | QmRVTDSPMSdJb1HCVydZtq31a7NftTL6QXt48aYyCMDAHZ | [task](https://beta.app.gelato.network/task/0x9379758cb85f52220f42d37a6273fd1ed48c8417504bfdba82bbb9d57bbcc6d0?chainId=1)     |
 | WETH InterestStrategy | QmRVTDSPMSdJb1HCVydZtq31a7NftTL6QXt48aYyCMDAHZ | [task](https://beta.app.gelato.network/task/0x244d687bda0412b3a86c86dcf39474a1d73272db53c8caa2cf5fd84f58636396?chainId=1)     |
 | Wrapped GLP           | QmZiThf85cGeTsL7dBxBW5EaucbUGuWa1QPxmnU36UdJDE | [task](https://beta.app.gelato.network/task/0x7b689ce2ec1c34ad394f39d895a185725945a52d3d6294cda05242c362c043a8?chainId=42161) |
+| MagicLevel Junior     | QmPLhqXuVh2vaEVUDXafjDXReedK38dEPxyLRHbRpJShcC | [task](https://beta.app.gelato.network/task/0xf321b8d61c4c2e14198e40f45b4023597fe3820e8d2f5a4a3ca46d5037c931cd?chainId=56) |
+| MagicLevel Mezzanine  | QmPLhqXuVh2vaEVUDXafjDXReedK38dEPxyLRHbRpJShcC | [task](https://beta.app.gelato.network/task/0x54a2389ab534c4b71335e352b0d9979512e8e415a26d10d512923ee1ed88c25c?chainId=56) |
+| MagicLevel Senior     | QmPLhqXuVh2vaEVUDXafjDXReedK38dEPxyLRHbRpJShcC | [task](https://beta.app.gelato.network/task/0x54a2389ab534c4b71335e352b0d9979512e8e415a26d10d512923ee1ed88c25c?chainId=56) |
