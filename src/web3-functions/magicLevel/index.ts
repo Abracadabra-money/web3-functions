@@ -8,9 +8,12 @@ import { SimulationUrlBuilder } from "../../utils/tenderly";
 
 const HARVESTER_ABI = [
   "function lastExecution() external view returns(uint256)",
-  "function totalRewardsBalanceAfterClaiming(address) external view returns(uint256)",
   "function run(address,uint256,address,uint256,bytes memory) external"
 ];
+
+const STAKING_LENS_ABI = [
+  "function pendingRewards(uint256,address) external view returns(uint256)"
+]
 
 const CHAINLINK_ORACLE_ABI = [
   "function latestAnswer() external view returns (int256)"
@@ -22,9 +25,14 @@ const VAULT_ORACLE_ABI = [
   "function trancheVault() external view returns (address)"
 ];
 
+const IERC20_ABI = [
+  "function balanceOf(address) external view returns (uint256)",
+];
+
 const VAULT_ABI = [
   "function totalSupply() external view returns (uint256)",
   "function convertToAssets(uint256) external view returns (uint256)",
+  "function asset() external view returns (address)"
 ];
 
 const GELATO_PROXY = "0x4D0c7842cD6a04f8EDB39883Db7817160DA159C3";
@@ -39,19 +47,33 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
 
   // Retrieve Last oracle update time
   const execAddress = "0x630FC1758De85C566Bdec1D75A894794E1819d7E";
+  const stakingLensAddress = "0x4437DB9538eb74C7418a1668766536b279C52709";
 
-  // for reference
-  const juniorVault = "0x2906ae98fdaf225a697a09158d10843a89cf0fc5";
-  const mezzanineVault = "0x75adc3b980c5c73ee35ecc41bf0d8b19699501b7";
-  const seniorVault = "0x0253db0dda6c063fae1e5fb28318e6dbe1c14e16";
+  const juniorVault = "0x2906ae98fdAf225a697a09158D10843A89CF0FC5";
+  const mezzanineVault = "0x75adc3b980C5c73EE35eCC41Bf0D8B19699501b7";
+  const seniorVault = "0x0253DB0DDA6c063fAE1E5fB28318e6DbE1c14e16";
   const juniorVaultOracle = "0x978d34a96780414c5978ab3e861b0d098b2a006c";
   const mezzanineVaultOracle = "0x4d526f103307b548227f502655f7b80796b64f52";
   const seniorVaultOracle = "0x93503ab9f3aa708b757caf3238b7673bab2e3409";
 
+  const getStakingPid = (vault: string) => {
+    switch (vault) {
+      case seniorVault:
+        return 0;
+      case mezzanineVault:
+        return 1;
+      case juniorVault:
+        return 2;
+      default:
+        throw new Error("Invalid vault address");
+    }
+  }
+
   const intervalInSeconds = 3600;
-  const lvlToken = "0xB64E280e9D1B5DbEc4AcceDb2257A87b400DB149"; // LVL token
+  const lvlTokensAddress = "0xB64E280e9D1B5DbEc4AcceDb2257A87b400DB149"; // LVL token
   const wbnbToken = "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c"; // WBNB token
   const mintLpSlippageInBips = 100
+  const lvlToken = new Contract(lvlTokensAddress, IERC20_ABI, provider);
   const vaultOracle = new Contract(userArgs.vaultOracle as string ?? juniorVaultOracle, VAULT_ORACLE_ABI, provider);
   const maxApyInBips = (userArgs.maxApyInBips as number) ?? 5000; // max 50% APY rewards
   const maxApyInBipsAsBN = BigNumber.from(maxApyInBips);
@@ -59,10 +81,12 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
 
   const BIPS = 10_000;
   const oneE8 = BigNumber.from("100000000");
+  const stakingLens = new Contract(stakingLensAddress, STAKING_LENS_ABI, provider);
   const harvester = new Contract(execAddress, HARVESTER_ABI, provider);
   const rewardTokenOracle = new Contract("0x0567F2323251f0Aab15c8dFb1967E4e8A7D42aeE", CHAINLINK_ORACLE_ABI, provider); // bnb/usd oracle
   const oracleImplementation = new Contract(await vaultOracle.oracleImplementation(), VAULT_ORACLE_ABI, provider);
   const vault = new Contract(await oracleImplementation.trancheVault(), VAULT_ABI, provider);
+  const asset = await vault.asset();
   const timestamp = parseInt(gelatoArgs.blockTime.toString());
   const lastTimestampStr = (await storage.get("lastTimestamp")) ?? (await harvester.lastExecution()).toString();
 
@@ -91,24 +115,17 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
   let wbnbTokenAmount;
   let swapData;
 
-
   try {
-    lvlTokenAmount = await harvester.totalRewardsBalanceAfterClaiming(vault.address);
-
-    // remove a small portion of expected lvl reward since this doesn't seem to give as much as expected when collecting rewards
-    // around 0.1% less especially when the reward is small
-    lvlTokenAmount = lvlTokenAmount.sub(
-      lvlTokenAmount.mul(10).div(BIPS)
-    );
-
+    const pid = getStakingPid(vault.address);
+    lvlTokenAmount = (await stakingLens.pendingRewards(pid, asset)).add(await lvlToken.balanceOf(vault.address)).add(await lvlToken.balanceOf(harvester.address));
     console.log("reward amount in LVL", (lvlTokenAmount.toString() as unknown as number / 1e18).toLocaleString());
 
   } catch (err) {
-    return { canExec: false, message: `totalRewardsBalanceAfterClaiming call failed ${err.toString()}` };
+    return { canExec: false, message: `pendingRewards call failed ${err.toString()}` };
   }
 
   try {
-    const url = `https://bsc.api.0x.org/swap/v1/quote?buyToken=${wbnbToken}&sellToken=${lvlToken}&sellAmount=${lvlTokenAmount}`;
+    const url = `https://bsc.api.0x.org/swap/v1/quote?buyToken=${wbnbToken}&sellToken=${lvlTokensAddress}&sellAmount=${lvlTokenAmount}`;
     console.log("0x api url", url);
     const response: any = await ky
       .get(url, { timeout: 5_000, retry: 0 })
