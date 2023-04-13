@@ -1,4 +1,3 @@
-import { CHAIN_ID } from "@gelatonetwork/ops-sdk";
 import {
   Web3Function,
   Web3FunctionContext,

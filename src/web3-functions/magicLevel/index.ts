@@ -46,15 +46,24 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
   }
 
   // Retrieve Last oracle update time
-  const execAddress = "0x630FC1758De85C566Bdec1D75A894794E1819d7E";
+  const execAddress = "0x418ADe5929fb6A9E3666ab19332e70A0f0A64470";
   const stakingLensAddress = "0x4437DB9538eb74C7418a1668766536b279C52709";
 
-  const juniorVault = "0x2906ae98fdAf225a697a09158D10843A89CF0FC5";
-  const mezzanineVault = "0x75adc3b980C5c73EE35eCC41Bf0D8B19699501b7";
-  const seniorVault = "0x0253DB0DDA6c063fAE1E5fB28318e6DbE1c14e16";
-  const juniorVaultOracle = "0x978d34a96780414c5978ab3e861b0d098b2a006c";
-  const mezzanineVaultOracle = "0x4d526f103307b548227f502655f7b80796b64f52";
-  const seniorVaultOracle = "0x93503ab9f3aa708b757caf3238b7673bab2e3409";
+  /*
+  harvestor 0x418ADe5929fb6A9E3666ab19332e70A0f0A64470
+  magicLLP Senior vault  0xD8Cbd5b22D7D37c978609e4e394cE8B9C003993b
+  magicLLP Senior oracle  0x75097B761514588b7c700F71a84DDBB5AD686074
+  magicLLP Mezzanine vault  0x87aC701ba8acb1966526375da68A692CebB8AF75
+  magicLLP Mezzanine oracle  0xc2758B836Cf4eebb4712746A087b426959E1De26
+  magicLLP Junior vault  0xC094c2a5C349eAd7839C1805126Da71Cc1cc1A39
+  magicLLP Junior oracle  0xDd45c6614305D705a444B3baB0405D68aC85DbA5
+  */
+  const juniorVault = "0xC094c2a5C349eAd7839C1805126Da71Cc1cc1A39";
+  const mezzanineVault = "0x87aC701ba8acb1966526375da68A692CebB8AF75";
+  const seniorVault = "0xD8Cbd5b22D7D37c978609e4e394cE8B9C003993b";
+  const juniorVaultOracle = "0xDd45c6614305D705a444B3baB0405D68aC85DbA5";
+  //const mezzanineVaultOracle = "0xc2758B836Cf4eebb4712746A087b426959E1De26";
+  //const seniorVaultOracle = "0x75097B761514588b7c700F71a84DDBB5AD686074";
 
   const getStakingPid = (vault: string) => {
     switch (vault) {
@@ -117,11 +126,15 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
 
   try {
     const pid = getStakingPid(vault.address);
-    lvlTokenAmount = (await stakingLens.pendingRewards(pid, asset)).add(await lvlToken.balanceOf(vault.address)).add(await lvlToken.balanceOf(harvester.address));
+    lvlTokenAmount = (await stakingLens.pendingRewards(pid, vault.address)).add(await lvlToken.balanceOf(vault.address)).add(await lvlToken.balanceOf(harvester.address));
     console.log("reward amount in LVL", (lvlTokenAmount.toString() as unknown as number / 1e18).toLocaleString());
 
   } catch (err) {
     return { canExec: false, message: `pendingRewards call failed ${err.toString()}` };
+  }
+
+  if (lvlTokenAmount.eq(0)) {
+    return { canExec: false, message: `no rewards yet` };
   }
 
   try {
@@ -133,7 +146,7 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
     wbnbTokenAmount = BigNumber.from(response["buyAmount"]);
     swapData = response["data"];
   } catch (err) {
-    return { canExec: false, message: `Coingecko call failed` };
+    return { canExec: false, message: `0x call failed` };
   }
 
   if (wbnbTokenAmount.gt(0)) {
