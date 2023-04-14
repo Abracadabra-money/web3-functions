@@ -46,18 +46,8 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
   }
 
   // Retrieve Last oracle update time
-  const execAddress = "0x418ADe5929fb6A9E3666ab19332e70A0f0A64470";
+  const execAddress = "0xa32D03497FF5C32bcfeebE6A677Dbe4A496fD918";
   const stakingLensAddress = "0x4437DB9538eb74C7418a1668766536b279C52709";
-
-  /*
-  harvestor 0x418ADe5929fb6A9E3666ab19332e70A0f0A64470
-  magicLLP Senior vault  0xD8Cbd5b22D7D37c978609e4e394cE8B9C003993b
-  magicLLP Senior oracle  0x75097B761514588b7c700F71a84DDBB5AD686074
-  magicLLP Mezzanine vault  0x87aC701ba8acb1966526375da68A692CebB8AF75
-  magicLLP Mezzanine oracle  0xc2758B836Cf4eebb4712746A087b426959E1De26
-  magicLLP Junior vault  0xC094c2a5C349eAd7839C1805126Da71Cc1cc1A39
-  magicLLP Junior oracle  0xDd45c6614305D705a444B3baB0405D68aC85DbA5
-  */
   const juniorVault = "0xC094c2a5C349eAd7839C1805126Da71Cc1cc1A39";
   const mezzanineVault = "0x87aC701ba8acb1966526375da68A692CebB8AF75";
   const seniorVault = "0xD8Cbd5b22D7D37c978609e4e394cE8B9C003993b";
@@ -95,7 +85,6 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
   const rewardTokenOracle = new Contract("0x0567F2323251f0Aab15c8dFb1967E4e8A7D42aeE", CHAINLINK_ORACLE_ABI, provider); // bnb/usd oracle
   const oracleImplementation = new Contract(await vaultOracle.oracleImplementation(), VAULT_ORACLE_ABI, provider);
   const vault = new Contract(await oracleImplementation.trancheVault(), VAULT_ABI, provider);
-  const asset = await vault.asset();
   const timestamp = parseInt(gelatoArgs.blockTime.toString());
   const lastTimestampStr = (await storage.get("lastTimestamp")) ?? (await harvester.lastExecution()).toString();
 
