@@ -16,7 +16,7 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 16
-      - working-directory: ./v2
+      - working-directory: .
         run: yarn
-      - working-directory: ./v2
+      - working-directory: 
         run: yarn test
