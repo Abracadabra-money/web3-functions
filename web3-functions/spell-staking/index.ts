@@ -15,6 +15,8 @@ const WITHDRAWER_ABI = [
 const DISTRIBUTOR_ABI = [
 ];
 
+const 
+
 Web3Function.onRun(async (context: Web3FunctionContext) => {
   const { userArgs, multiChainProvider } = context;
 
