@@ -1,0 +1,56 @@
+{
+  "name": "@abracadabra-money/web3-functions-v2",
+  "version": "1.0.0",
+  "description": "Gelato Web3 Functions v2",
+  "url": "https://github.com/Abracadabra-money/web3-functions",
+  "private": false,
+  "scripts": {
+    "build": "yarn clean && yarn install && npx tsc",
+    "clean": "rm -rf dist",
+    "format": "prettier --write */**/*.*{js,json,md,ts}",
+    "format:check": "prettier --check */**/*.*{js,json,md,ts}",
+    "lint:ts": "eslint -c .eslintrc.json --ext \"**/*.ts\" \"**/*.test.ts\"",
+    "test:spell-staking": "npx hardhat w3f-run spell-staking --logs",
+    "test": "yarn test:spell-staking"
+  },
+  "license": "ISC",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-chai-matchers": "1.0.6",
+    "@nomicfoundation/hardhat-network-helpers": "1.0.8",
+    "@nomiclabs/hardhat-ethers": "npm:hardhat-deploy-ethers",
+    "@nomiclabs/hardhat-waffle": "^2.0.5",
+    "@tsconfig/recommended": "1.0.2",
+    "@typechain/ethers-v5": "10.2.0",
+    "@typechain/hardhat": "6.1.5",
+    "@types/chai": "4.3.4",
+    "@types/mocha": "10.0.1",
+    "@types/node": "18.14.0",
+    "@typescript-eslint/eslint-plugin": "5.53.0",
+    "@typescript-eslint/parser": "5.53.0",
+    "chai": "4.3.7",
+    "dotenv": "16.0.3",
+    "eslint": "8.34.0",
+    "eslint-config-prettier": "8.6.0",
+    "eslint-plugin-prettier": "4.2.1",
+    "ethereum-waffle": "4.0.10",
+    "ethers": "5.7.1",
+    "hardhat": "^2.13.0",
+    "lint-staged": "13.1.2",
+    "prettier": "2.8.4",
+    "prettier-plugin-solidity": "1.1.2",
+    "solhint": "3.4.0",
+    "solhint-plugin-prettier": "0.0.5",
+    "ts-generator": "0.1.1",
+    "ts-node": "10.9.1",
+    "typescript": "4.9.5"
+  },
+  "lint-staged": {
+    "*.*{js,json,md,ts,yml,yaml}": "prettier --write",
+    "*.*{ts,js}": "eslint -c .eslintrc.json"
+  },
+  "dependencies": {
+    "@gelatonetwork/automate-sdk": "^2.7.0-beta",
+    "@gelatonetwork/web3-functions-sdk": "^2.0.3",
+    "ky": "^0.33.2"
+  }
+}
