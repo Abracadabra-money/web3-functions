@@ -7,7 +7,7 @@
     "treasuryPercentage": "number",
     "distributionMinMIMAmount": "string",
     "bridgingMinMIMAmount": "string",
-    "distributionIntervalInMinutes": "number",
-    "withdrawalIntervalInMinutes": "number"
+    "mainnetIntervalInSeconds": "number",
+    "altChainIntervalInSeconds": "number"
   }
 }

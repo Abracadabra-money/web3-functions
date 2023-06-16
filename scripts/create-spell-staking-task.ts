@@ -16,18 +16,54 @@ const main = async () => {
   const cid = await spellStakingW3f.deploy();
   console.log(`Web3Function IPFS CID: ${cid}`);
 
-  // Create task using automate sdk
-  console.log("Creating automate task...");
-  const { taskId, tx } = await automate.createBatchExecTask({
-    name: "Web3Function - Eth Oracle",
-    web3FunctionHash: cid,
-    web3FunctionArgs: {},
-  });
-  await tx.wait();
-  console.log(`Task created, taskId: ${taskId} (tx hash: ${tx.hash})`);
-  console.log(
-    `> https://beta.app.gelato.network/task/${taskId}?chainId=${chainId}`
-  );
+  {
+    console.log("Creating Mainnet Task");
+    const task = await automate.createBatchExecTask({
+      name: "SpellStaking: Withdraw & Distribute",
+      web3FunctionHash: cid,
+      web3FunctionArgs: {
+        // not used on mainnet
+        bridgingMinMIMAmount: "0",
+        altChainIntervalInSeconds: 0,
+
+        // parameters
+        treasuryPercentage: 50,
+        mainnetIntervalInSeconds: 86400, // 1x a day
+        distributionMinMIMAmount: "100000000000000000000",
+      },
+    });
+    console.log(`to: ${task.tx.to}`);
+    console.log(task.tx.data);
+    console.log("------------------");
+    console.log();
+  }
+
+  const ALTCHAIN_IDS = [250, 43114, 42161];
+
+  for (const chainId of ALTCHAIN_IDS) {
+    console.log(`Creating ChainId ${chainId} Task`);
+    const { taskId, tx } = await automate.createBatchExecTask({
+      name: "SpellStaking: Withdraw & Bridge",
+      web3FunctionHash: cid,
+      web3FunctionArgs: {
+        // not used on altchain
+        treasuryPercentage: 0,
+        distributionMinMIMAmount: "0",
+        mainnetIntervalInSeconds: 0,
+
+        // parameters
+        bridgingMinMIMAmount: "50000000000000000000", // 50 MIM require to bridge
+        altChainIntervalInSeconds: 17280 // 5x a day
+      },
+    });
+
+    await automate.cancelTask(taskId);
+
+    console.log(`to: ${tx.to}`);
+    console.log(tx.data);
+    console.log("------------------");
+    console.log();
+  }
 };
 
 main()

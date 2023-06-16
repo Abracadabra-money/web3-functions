@@ -11,7 +11,7 @@
     "format:check": "prettier --check */**/*.*{js,json,md,ts}",
     "lint:ts": "eslint -c .eslintrc.json --ext \"**/*.ts\" \"**/*.test.ts\"",
     "test": "yarn test:spell-staking",
-    "create-task:spell-staking": "hardhat run ./scripts/create-spell-staking-task.ts",
+    "create-task:spell-staking": "killall -9 anvil; hardhat run ./scripts/create-spell-staking-task.ts --network anvil",
     "test:spell-staking": "yarn test:spell-staking-mainnet && yarn test:spell-staking-avalanche && yarn test:spell-staking-arbitrum && yarn test:spell-staking-fantom",
     "test:spell-staking-mainnet": "hardhat w3f-run spell-staking --logs --network ethereum",
     "test:spell-staking-avalanche": "hardhat w3f-run spell-staking --logs --network avalanche",
@@ -20,6 +20,7 @@
   },
   "license": "ISC",
   "devDependencies": {
+    "@foundry-rs/hardhat-anvil": "^0.1.7",
     "@nomicfoundation/hardhat-chai-matchers": "1.0.6",
     "@nomicfoundation/hardhat-network-helpers": "1.0.8",
     "@nomiclabs/hardhat-ethers": "npm:hardhat-deploy-ethers",

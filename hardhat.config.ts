@@ -3,6 +3,7 @@ import "@gelatonetwork/web3-functions-sdk/hardhat-plugin";
 import "@typechain/hardhat";
 import "@nomiclabs/hardhat-ethers";
 import "@nomiclabs/hardhat-waffle";
+import "@foundry-rs/hardhat-anvil";
 
 // Process Env Variables
 import * as dotenv from "dotenv";
@@ -24,6 +25,12 @@ const config: HardhatUserConfig = {
   defaultNetwork: "ethereum",
 
   networks: {
+    anvil: {
+      url: "http://127.0.0.1:8545/",
+      launch: true,
+      chainId: 1,
+      forkUrl: "https://eth-rpc.gateway.pokt.network",
+    },
     ethereum: {
       chainId: 1,
       url: "https://eth-rpc.gateway.pokt.network",
