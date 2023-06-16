@@ -30,6 +30,3 @@ deployments/localhost
 
 # yarn
 yarn-error.log
-
-# vscode
-.vscode

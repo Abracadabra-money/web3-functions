@@ -10,8 +10,13 @@
     "format": "prettier --write */**/*.*{js,json,md,ts}",
     "format:check": "prettier --check */**/*.*{js,json,md,ts}",
     "lint:ts": "eslint -c .eslintrc.json --ext \"**/*.ts\" \"**/*.test.ts\"",
-    "test:spell-staking": "npx hardhat w3f-run spell-staking --logs",
-    "test": "yarn test:spell-staking"
+    "test": "yarn test:spell-staking",
+    "create-task:spell-staking": "hardhat run ./scripts/create-spell-staking-task.ts",
+    "test:spell-staking": "yarn test:spell-staking-mainnet && yarn test:spell-staking-avalanche && yarn test:spell-staking-arbitrum && yarn test:spell-staking-fantom",
+    "test:spell-staking-mainnet": "hardhat w3f-run spell-staking --logs --network ethereum",
+    "test:spell-staking-avalanche": "hardhat w3f-run spell-staking --logs --network avalanche",
+    "test:spell-staking-arbitrum": "hardhat w3f-run spell-staking --logs --network arbitrum",
+    "test:spell-staking-fantom": "hardhat w3f-run spell-staking --logs --network fantom"
   },
   "license": "ISC",
   "devDependencies": {
