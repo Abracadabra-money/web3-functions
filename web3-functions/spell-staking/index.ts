@@ -14,6 +14,14 @@ interface Calldata {
   data: string;
 }
 
+interface Distribution {
+  recipient: string;
+  gas: BigNumber;
+  lzChainId: BigNumber;
+  fee: BigNumber;
+  amount: BigNumber;
+}
+
 Web3Function.onRun(async (context: Web3FunctionContext) => {
   const { userArgs, multiChainProvider, gelatoArgs } = context;
 
@@ -22,6 +30,7 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
   const distributionMinMIMAmount = BigNumber.from(
     userArgs.distributionMinMIMAmount as string
   );
+
   const treasuryPercentage = BigNumber.from(
     userArgs.treasuryPercentage as number
   );
@@ -33,6 +42,8 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
   /////////////////////////////////////////////////////
   // Constants
   /////////////////////////////////////////////////////
+  const MAINNET_CHAIN_ID = 1;
+  const TREASURY_FEE_PRECISION = BigNumber.from(100);
   const MSPELL_STAKING_ADDRESSES: { [chainId: number]: string } = {
     1: "0xbD2fBaf2dc95bD78Cf1cD3c5235B33D1165E6797", // Ethereum
     250: "0xa668762fb20bcd7148Db1bdb402ec06Eb6DAD569", // Fantom
@@ -57,6 +68,7 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
     distributor: "0x953DAb0e64828972853E7faA45634620A40Fa479",
     sSpell: "0x26FA3fFFB6EfE8c1E69103aCb4044C26B9A106a9",
     treasury: "0xDF2C270f610Dc35d8fFDA5B453E74db5471E126B",
+    sSpellBuyBack: "0xdFE1a5b757523Ca6F7f049ac02151808E6A52111",
   };
 
   const WITHDRAWER_INTERFACE = new utils.Interface(WITHDRAWER_ABI);
@@ -68,6 +80,13 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
   // supported chains
   const ALTCHAIN_IDS = [250, 43114, 42161];
   const CHAIN_IDS = [1, ...ALTCHAIN_IDS];
+
+  const LZ_CHAIN_IDS: { [key: number]: number } = {
+    1: 101,
+    250: 112,
+    43114: 106,
+    42161: 110,
+  };
 
   /////////////////////////////////////////////////
   // Initialization
@@ -94,45 +113,54 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
 
   const callData: Calldata[] = [];
 
+  const mim = new Contract(
+    MIM_ADDRESSES[gelatoArgs.chainId],
+    IERC20_ABI,
+    multiChainProvider.chainId(gelatoArgs.chainId)
+  );
+
+  // Determine the total mim amount that will be withdrawn
+  const amountToWithdraw = await info[
+    gelatoArgs.chainId
+  ].withdrawer.callStatic.withdraw();
+
+  // The current amount plus the amount that will be withdrawn
+  let mimBalanceInDistributor = amountToWithdraw.add(
+    mim.balanceOf(info[gelatoArgs.chainId].withdrawer.address)
+  );
+
   /////////////////////////////////////////////////
   // Per-Chain Actions
   /////////////////////////////////////////////////
   // ~~~~~~~ Mainnet ~~~~~~~
-  if (gelatoArgs.chainId == 1) {
-    const mimMainnet = new Contract(
-      MIM_ADDRESSES[1],
-      IERC20_ABI,
-      multiChainProvider.chainId(1)
-    );
+  if (gelatoArgs.chainId == MAINNET_CHAIN_ID) {
     const distributorMainnet = new Contract(
       MAINNET_ADDRESSES.distributor,
       DISTRIBUTOR_ABI,
-      multiChainProvider.chainId(1)
+      multiChainProvider.chainId(MAINNET_CHAIN_ID)
     );
 
-    let totalStakedAmount = BigNumber.from(0);
-    const mimBalanceInDistributor = await mimMainnet.balanceOf(
-      MAINNET_ADDRESSES.distributor
-    );
+    let totalSpellStaked = BigNumber.from(0);
 
     // Fetch staked amounts
     await Promise.all(
       CHAIN_IDS.map(async (chainId) => {
+        // mSPELL staked amount
         info[chainId].mSpellStakedAmount = await info[chainId].spell.balanceOf(
           MSPELL_STAKING_ADDRESSES[chainId]
         );
 
-        // sSPELL is only on Ethereum
-        if (chainId == 1) {
+        // sSPELL staked amount (mainnet only)
+        if (chainId == MAINNET_CHAIN_ID) {
           info[chainId].sSpellStakedAmount = await info[
             chainId
           ].spell.balanceOf(MAINNET_ADDRESSES.sSpell);
-          totalStakedAmount = totalStakedAmount.add(
+          totalSpellStaked = totalSpellStaked.add(
             info[chainId].sSpellStakedAmount
           );
         }
 
-        totalStakedAmount = totalStakedAmount.add(
+        totalSpellStaked = totalSpellStaked.add(
           info[chainId].mSpellStakedAmount
         );
       })
@@ -140,56 +168,115 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
 
     // Distribution
     if (mimBalanceInDistributor.gte(distributionMinMIMAmount)) {
-      // empty
+      const distributions: Distribution[] = [];
+
+      const treasuryAllocation = mimBalanceInDistributor
+        .mul(treasuryPercentage)
+        .div(TREASURY_FEE_PRECISION);
+
+      mimBalanceInDistributor = mimBalanceInDistributor.sub(treasuryAllocation);
+
+      // Treasury allocation
+      distributions.push({
+        recipient: MAINNET_ADDRESSES.treasury,
+        gas: BigNumber.from(0),
+        lzChainId: BigNumber.from(0),
+        fee: BigNumber.from(0),
+        amount: treasuryAllocation,
+      });
+
+      // Mainnet sSpell allocation
+      distributions.push({
+        recipient: MAINNET_ADDRESSES.sSpellBuyBack,
+        gas: BigNumber.from(0),
+        lzChainId: BigNumber.from(0),
+        fee: BigNumber.from(0),
+        amount: mimBalanceInDistributor
+          .mul(info[MAINNET_CHAIN_ID].sSpellStakedAmount)
+          .div(totalSpellStaked),
+      });
+
+      // Mainnet mSpell allocation
+      distributions.push({
+        recipient: MSPELL_STAKING_ADDRESSES[1],
+        gas: BigNumber.from(0),
+        lzChainId: BigNumber.from(0),
+        fee: BigNumber.from(0),
+        amount: mimBalanceInDistributor
+          .mul(info[MAINNET_CHAIN_ID].mSpellStakedAmount)
+          .div(totalSpellStaked),
+      });
+
+      // AltChain allocations
+      for (const chainId in ALTCHAIN_IDS) {
+        const amountToBridge = mimBalanceInDistributor
+          .mul(info[chainId].mSpellStakedAmount)
+          .div(totalSpellStaked);
+
+        // Estimate bridging fee
+        const { fee, gas } = await distributorMainnet.estimateBridgingFee(
+          amountToBridge,
+          0
+        ); // use default minDstGasLookup
+
+        distributions.push({
+          recipient: MSPELL_STAKING_ADDRESSES[1],
+          gas: gas,
+          lzChainId: BigNumber.from(LZ_CHAIN_IDS[chainId].toString()),
+          fee: fee,
+          amount: amountToBridge,
+        });
+      }
+
+      // withdraw
+      callData.push({
+        to: WITHDRAWER_ADDRESS,
+        data: WITHDRAWER_INTERFACE.encodeFunctionData("withdraw", []),
+      });
+
+      // distribute
+      callData.push({
+        to: distributorMainnet.address,
+        data: DISTRIBUTOR_INTERFACE.encodeFunctionData(
+          "distribute",
+          distributions
+        ),
+      });
     } else {
       console.log(
         `Not enough MIM in distributor. Minimum amount: ${distributionMinMIMAmount.toString()}. Current amount: ${mimBalanceInDistributor.toString()}`
       );
     }
-
-    // withdraw
-    callData.push({
-      to: WITHDRAWER_ADDRESS,
-      data: WITHDRAWER_INTERFACE.encodeFunctionData("withdraw", []),
-    });
   }
+
   // ~~~~~~~ AltChains ~~~~~~~
   else {
-    const mim = new Contract(
-      MIM_ADDRESSES[gelatoArgs.chainId],
-      IERC20_ABI,
-      multiChainProvider.chainId(gelatoArgs.chainId)
-    );
+    if (mimBalanceInDistributor.gte(bridgingMinMIMAmount)) {
+      // Estimate bridging fee
+      const { fee, gas } = await info[
+        gelatoArgs.chainId
+      ].withdrawer.estimateBridgingFee(mimBalanceInDistributor, 0); // use default minDstGasLookup
 
-    // Determine the total mim amount that will need to be bridged
-    const amountToWithdraw = await info[
-      gelatoArgs.chainId
-    ].withdrawer.callStatic.withdraw();
+      // withdraw
+      callData.push({
+        to: WITHDRAWER_ADDRESS,
+        data: WITHDRAWER_INTERFACE.encodeFunctionData("withdraw", []),
+      });
 
-    // The current amount plus the amount that will be withdrawn
-    const totalMimToBridge = amountToWithdraw.add(
-      mim.balanceOf(info[gelatoArgs.chainId].withdrawer.address)
-    );
-
-    // Estimate bridging fee
-    const { fee, adapterParams } = await info[
-      gelatoArgs.chainId
-    ].withdrawer.estimateBridgingFee(totalMimToBridge, 0); // use default minDstGasLookup
-
-    // withdraw
-    callData.push({
-      to: WITHDRAWER_ADDRESS,
-      data: WITHDRAWER_INTERFACE.encodeFunctionData("withdraw", []),
-    });
-    // bridge
-    callData.push({
-      to: WITHDRAWER_ADDRESS,
-      data: WITHDRAWER_INTERFACE.encodeFunctionData("bridge", [
-        totalMimToBridge,
-        fee,
-        adapterParams,
-      ]),
-    });
+      // bridge
+      callData.push({
+        to: WITHDRAWER_ADDRESS,
+        data: WITHDRAWER_INTERFACE.encodeFunctionData("bridge", [
+          mimBalanceInDistributor,
+          fee,
+          gas,
+        ]),
+      });
+    } else {
+      console.log(
+        `Not enough MIM in distributor. Minimum amount: ${bridgingMinMIMAmount.toString()}. Current amount after withdraw: ${mimBalanceInDistributor.toString()}`
+      );
+    }
   }
 
   /////////////////////////////////////////////////////

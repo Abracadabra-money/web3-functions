@@ -137,9 +137,9 @@
         "type": "uint256"
       },
       {
-        "internalType": "bytes",
-        "name": "adapterParams",
-        "type": "bytes"
+        "internalType": "uint256",
+        "name": "gas",
+        "type": "uint256"
       }
     ],
     "name": "bridge",
@@ -213,11 +213,6 @@
         "internalType": "uint256",
         "name": "amount",
         "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "gas",
-        "type": "uint256"
       }
     ],
     "name": "estimateBridgingFee",
@@ -228,9 +223,9 @@
         "type": "uint256"
       },
       {
-        "internalType": "bytes",
-        "name": "adapterParams",
-        "type": "bytes"
+        "internalType": "uint256",
+        "name": "gas",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
