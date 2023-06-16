@@ -1,1 +1,7 @@
-{}
+{
+  "treasuryPercentage": 50,
+  "distributionMinMIMAmount": "100000000000000000000",
+  "bridgingMinMIMAmount": "50000000000000000000",
+  "distributionIntervalInMinutes": 1440,
+  "withdrawalIntervalInMinutes": 288
+}

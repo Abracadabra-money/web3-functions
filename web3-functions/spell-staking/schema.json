@@ -4,6 +4,10 @@
   "memory": 128,
   "timeout": 30,
   "userArgs": {
-
+    "treasuryPercentage": "number",
+    "distributionMinMIMAmount": "string",
+    "bridgingMinMIMAmount": "string",
+    "distributionIntervalInMinutes": "number",
+    "withdrawalIntervalInMinutes": "number"
   }
 }

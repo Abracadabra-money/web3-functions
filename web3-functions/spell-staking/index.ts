@@ -2,91 +2,204 @@ import {
   Web3Function,
   Web3FunctionContext,
 } from "@gelatonetwork/web3-functions-sdk";
-import { BigNumber, Contract } from "ethers";
+import { BigNumber, Contract, utils } from "ethers";
 
-const WITHDRAWER_ABI = [
-  "function getStoredPrice() public view returns (uint256)",
-  "function getLivePrice() public view returns (uint256)",
-  "function getPriceDeviation() external view returns (uint)",
-  "function decimals() external pure returns (uint8)",
-  "function updatePrice() public",
-];
+// import the above using require so that it's javascript objects
+const WITHDRAWER_ABI = require("./abi/CauldronFeeWithdrawer.json");
+const DISTRIBUTOR_ABI = require("./abi/SpellStakingRewardDistributor.json");
+const IERC20_ABI = require("./abi/IERC20.json");
 
-const DISTRIBUTOR_ABI = [
-];
-
-const 
+interface Calldata {
+  to: string;
+  data: string;
+}
 
 Web3Function.onRun(async (context: Web3FunctionContext) => {
-  const { userArgs, multiChainProvider } = context;
+  const { userArgs, multiChainProvider, gelatoArgs } = context;
 
-  const withdrawerAddress = "0x2C9f65BD1a501CB406584F5532cE57c28829B131";
-  const distributorAddress = "0x953DAb0e64828972853E7faA45634620A40Fa479";
+  console.log("ChainId", gelatoArgs.chainId);
 
-  const withdrawers: { [chainId: number]: Contract } = {};
+  const distributionMinMIMAmount = BigNumber.from(
+    userArgs.distributionMinMIMAmount as string
+  );
+  const treasuryPercentage = BigNumber.from(
+    userArgs.treasuryPercentage as number
+  );
 
-  const chainIds = [1, 250, 43114, 42161];
+  const bridgingMinMIMAmount = BigNumber.from(
+    userArgs.bridgingMinMIMAmount as string
+  );
 
-  chainIds.forEach(async (chainId) => {
+  /////////////////////////////////////////////////////
+  // Constants
+  /////////////////////////////////////////////////////
+  const MSPELL_STAKING_ADDRESSES: { [chainId: number]: string } = {
+    1: "0xbD2fBaf2dc95bD78Cf1cD3c5235B33D1165E6797", // Ethereum
+    250: "0xa668762fb20bcd7148Db1bdb402ec06Eb6DAD569", // Fantom
+    43114: "0xBd84472B31d947314fDFa2ea42460A2727F955Af", // Avalanche
+    42161: "0x1DF188958A8674B5177f77667b8D173c3CdD9e51", // Arbitrum
+  };
+  const MIM_ADDRESSES: { [chainId: number]: string } = {
+    1: "0x99D8a9C45b2ecA8864373A26D1459e3Dff1e17F3", // Ethereum
+    250: "0x82f0B8B456c1A451378467398982d4834b6829c1", // Fantom
+    43114: "0x130966628846BFd36ff31a822705796e8cb8C18D", // Avalanche
+    42161: "0xFEa7a6a0B346362BF88A9e4A88416B77a57D6c2A", // Arbitrum
+  };
+  const SPELL_ADDRESSES: { [chainId: number]: string } = {
+    1: "0x090185f2135308BaD17527004364eBcC2D37e5F6", // Ethereum
+    250: "0x468003B688943977e6130F4F68F23aad939a1040", // Fantom
+    43114: "0xCE1bFFBD5374Dac86a2893119683F4911a2F7814", // Avalanche
+    42161: "0x3E6648C5a70A150A88bCE65F4aD4d506Fe15d2AF", // Arbitrum
+  };
+
+  const MAINNET_ADDRESSES = {
+    withdrawer: "0x2C9f65BD1a501CB406584F5532cE57c28829B131",
+    distributor: "0x953DAb0e64828972853E7faA45634620A40Fa479",
+    sSpell: "0x26FA3fFFB6EfE8c1E69103aCb4044C26B9A106a9",
+    treasury: "0xDF2C270f610Dc35d8fFDA5B453E74db5471E126B",
+  };
+
+  const WITHDRAWER_INTERFACE = new utils.Interface(WITHDRAWER_ABI);
+  const DISTRIBUTOR_INTERFACE = new utils.Interface(DISTRIBUTOR_ABI);
+
+  // same address on all chains
+  const WITHDRAWER_ADDRESS = "0x2C9f65BD1a501CB406584F5532cE57c28829B131";
+
+  // supported chains
+  const ALTCHAIN_IDS = [250, 43114, 42161];
+  const CHAIN_IDS = [1, ...ALTCHAIN_IDS];
+
+  /////////////////////////////////////////////////
+  // Initialization
+  /////////////////////////////////////////////////
+  const info: {
+    [chainId: number]: {
+      withdrawer: Contract;
+      spell: Contract;
+      mSpellStakedAmount: BigNumber;
+      sSpellStakedAmount: BigNumber;
+    };
+  } = {};
+
+  CHAIN_IDS.forEach(async (chainId) => {
     const provider = multiChainProvider.chainId(chainId);
 
-    const withdrawer = new Contract(
-      withdrawerAddress,
-      WITHDRAWER_ABI,
-      provider
-    );
-    withdrawers[chainId] = withdrawer;
+    info[chainId] = {
+      withdrawer: new Contract(WITHDRAWER_ADDRESS, WITHDRAWER_ABI, provider),
+      spell: new Contract(SPELL_ADDRESSES[chainId], IERC20_ABI, provider),
+      mSpellStakedAmount: BigNumber.from(0),
+      sSpellStakedAmount: BigNumber.from(0),
+    };
   });
 
-  const distributor = new Contract(distributorAddress, DISTRIBUTOR_ABI, multiChainProvider.chainId(1));
+  const callData: Calldata[] = [];
 
-  const provider = multiChainProvider.chainId(1);
-  const chainId = await (await provider.getNetwork()).chainId;
-  const blockHeight = await provider.getBlockNumber();
+  /////////////////////////////////////////////////
+  // Per-Chain Actions
+  /////////////////////////////////////////////////
+  // ~~~~~~~ Mainnet ~~~~~~~
+  if (gelatoArgs.chainId == 1) {
+    const mimMainnet = new Contract(
+      MIM_ADDRESSES[1],
+      IERC20_ABI,
+      multiChainProvider.chainId(1)
+    );
+    const distributorMainnet = new Contract(
+      MAINNET_ADDRESSES.distributor,
+      DISTRIBUTOR_ABI,
+      multiChainProvider.chainId(1)
+    );
 
-  /*const oracleAddress = userArgs.oracleAddress as string;
-  const oracle = new Contract(oracleAddress, ORACLE_ABI, provider);
- 
-  // Wrap contract with redstone data service
-  const wrappedOracle = WrapperBuilder.wrap(oracle).usingDataService(
-    {
-      dataServiceId: "redstone-rapid-demo",
-      uniqueSignersCount: 1,
-      dataFeeds: ["ETH"],
-      disablePayloadsDryRun: true,
-    },
-    ["https://d33trozg86ya9x.cloudfront.net"]
-  );
- 
-  // Retrieve stored & live prices
-  const decimals = await wrappedOracle.decimals();
-  const livePrice: BigNumber = await wrappedOracle.getLivePrice();
-  const storedPrice: BigNumber = await wrappedOracle.getStoredPrice();
-  console.log(`Live price: ${livePrice.toString()}`);
-  console.log(`Stored price: ${storedPrice.toString()}`);
- 
-  // Check price deviation
-  const deviation: BigNumber = await wrappedOracle.getPriceDeviation();
-  const deviationPrct = (deviation.toNumber() / 10 ** decimals) * 100;
-  console.log(`Deviation: ${deviationPrct.toFixed(2)}%`);
- 
-  // Only update price if deviation is above 0.2%
-  const minDeviation = 0.2;
-  if (deviationPrct < minDeviation) {
-    return {
-      canExec: false,
-      message: `No update: price deviation too small`,
-    };
+    let totalStakedAmount = BigNumber.from(0);
+    const mimBalanceInDistributor = await mimMainnet.balanceOf(
+      MAINNET_ADDRESSES.distributor
+    );
+
+    // Fetch staked amounts
+    await Promise.all(
+      CHAIN_IDS.map(async (chainId) => {
+        info[chainId].mSpellStakedAmount = await info[chainId].spell.balanceOf(
+          MSPELL_STAKING_ADDRESSES[chainId]
+        );
+
+        // sSPELL is only on Ethereum
+        if (chainId == 1) {
+          info[chainId].sSpellStakedAmount = await info[
+            chainId
+          ].spell.balanceOf(MAINNET_ADDRESSES.sSpell);
+          totalStakedAmount = totalStakedAmount.add(
+            info[chainId].sSpellStakedAmount
+          );
+        }
+
+        totalStakedAmount = totalStakedAmount.add(
+          info[chainId].mSpellStakedAmount
+        );
+      })
+    );
+
+    // Distribution
+    if (mimBalanceInDistributor.gte(distributionMinMIMAmount)) {
+      // empty
+    } else {
+      console.log(
+        `Not enough MIM in distributor. Minimum amount: ${distributionMinMIMAmount.toString()}. Current amount: ${mimBalanceInDistributor.toString()}`
+      );
+    }
+
+    // withdraw
+    callData.push({
+      to: WITHDRAWER_ADDRESS,
+      data: WITHDRAWER_INTERFACE.encodeFunctionData("withdraw", []),
+    });
   }
- 
-  // Craft transaction to update the price on-chain
-  const { data } = await wrappedOracle.populateTransaction.updatePrice();
- 
-  */
+  // ~~~~~~~ AltChains ~~~~~~~
+  else {
+    const mim = new Contract(
+      MIM_ADDRESSES[gelatoArgs.chainId],
+      IERC20_ABI,
+      multiChainProvider.chainId(gelatoArgs.chainId)
+    );
+
+    // Determine the total mim amount that will need to be bridged
+    const amountToWithdraw = await info[
+      gelatoArgs.chainId
+    ].withdrawer.callStatic.withdraw();
+
+    // The current amount plus the amount that will be withdrawn
+    const totalMimToBridge = amountToWithdraw.add(
+      mim.balanceOf(info[gelatoArgs.chainId].withdrawer.address)
+    );
+
+    // Estimate bridging fee
+    const { fee, adapterParams } = await info[
+      gelatoArgs.chainId
+    ].withdrawer.estimateBridgingFee(totalMimToBridge, 0); // use default minDstGasLookup
+
+    // withdraw
+    callData.push({
+      to: WITHDRAWER_ADDRESS,
+      data: WITHDRAWER_INTERFACE.encodeFunctionData("withdraw", []),
+    });
+    // bridge
+    callData.push({
+      to: WITHDRAWER_ADDRESS,
+      data: WITHDRAWER_INTERFACE.encodeFunctionData("bridge", [
+        totalMimToBridge,
+        fee,
+        adapterParams,
+      ]),
+    });
+  }
+
+  /////////////////////////////////////////////////////
+  // Fee withdrawing & bridging
+  /////////////////////////////////////////////////////
+
+  /////////////////////////////////////////////////////
+  // Mainnet Operations
   return {
     canExec: true,
-    callData: [
-      //{ to: oracleAddress, data: data as string }
-    ],
+    callData,
   };
 });
