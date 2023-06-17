@@ -13,3 +13,5 @@
 | MagicLevel Senior     | QmXBENs9QiBvujpNvTc5TZxq8WXWJ1mHR7zAWyjTqPTwu1 | [task](https://beta.app.gelato.network/task/0xeac743d237030d4165f12911f2888890de0965c4fb18b45c35470e3b11924df4?chainId=56) |
 | MagicLevel Mezzanine  | QmXBENs9QiBvujpNvTc5TZxq8WXWJ1mHR7zAWyjTqPTwu1 | [task](https://beta.app.gelato.network/task/0xc25898a66a13d0291a242b68f60315ed0c5755528f9f50c1b402c9760f9f516b?chainId=56) |
 | MagicLevel Junior     | QmXBENs9QiBvujpNvTc5TZxq8WXWJ1mHR7zAWyjTqPTwu1 | [task](https://beta.app.gelato.network/task/0xeac743d237030d4165f12911f2888890de0965c4fb18b45c35470e3b11924df4?chainId=56) |
+| Distributor Mainnet     | QmadeTnu1krrE3PprxbnYryA4t4EcFC5eQUFe8HhrDRm72 | [task](https://beta.app.gelato.network/task/0x89b961b023a535a62e1020775d1c290dfd400cd7084f964b89773dee18396acb?chainId=1) |
+| Distributor Arbitrum   | QmadeTnu1krrE3PprxbnYryA4t4EcFC5eQUFe8HhrDRm72 | [task](https://beta.app.gelato.network/task/0xbe303dcfc12e4f8adc4b90052946fb72fa84ac1235a623df686e984016080c6d?chainId=42161) |
