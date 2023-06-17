@@ -135,9 +135,16 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
     await mim.balanceOf(info[gelatoArgs.chainId].withdrawer.address)
   );
 
+  if (gelatoArgs.chainId == MAINNET_CHAIN_ID) {
+    mimBalanceInDistributor = mimBalanceInDistributor.add(
+      await mim.balanceOf(MAINNET_ADDRESSES.distributor)
+    )
+  }
+
   console.log(`Amount to distribute: ${(mimBalanceInDistributor.toString() / 1e18).toLocaleString()} MIM`);
 
-  const lastRun = Number(await storage.get("lastRun")) ?? 0;
+  let lastRun = Number(await storage.get("lastRun")) ?? 0;
+  lastRun = lastRun >= 0 ? lastRun : 0;
 
   const mainnetRun = async () => {
     const distributorMainnet = new Contract(

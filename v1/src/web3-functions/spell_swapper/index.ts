@@ -85,7 +85,6 @@ const getSwapData = async (
   if (!("data" in txObj)) throw Error("No swapDataJson");
   const swapData = txObj.data;
 
-  console.log(swapData);
   return swapData;
 };
 
@@ -136,7 +135,7 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
     toTokenAddress,
     fromTokenAmount
   );
-
+  console.log(utils.formatEther(fromTokenAmount));
   console.log(toTokenAmount.toString());
 
   if (toTokenAmount.lt(utils.parseEther("100000")))

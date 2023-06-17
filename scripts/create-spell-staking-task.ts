@@ -20,7 +20,6 @@ const main = async () => {
     console.log("Creating Mainnet Task");
     const task = await automate.createBatchExecTask({
       name: "SpellStaking: Withdraw & Distribute",
-      execSelector: "0xc0e8c0c2",
       web3FunctionHash: cid,
       web3FunctionArgs: {
         // not used on mainnet
