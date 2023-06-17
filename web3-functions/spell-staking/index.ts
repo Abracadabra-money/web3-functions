@@ -241,15 +241,12 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
 
         }
 
-
         // withdraw
         callData.push({
           to: WITHDRAWER_ADDRESS,
           data: WITHDRAWER_INTERFACE.encodeFunctionData("withdraw", []),
         });
 
-
-        console.log(distributions);
         // distribute
         callData.push({
           to: distributorMainnet.address,
