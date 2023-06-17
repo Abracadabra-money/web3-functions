@@ -16,10 +16,10 @@ interface Calldata {
 
 interface Distribution {
   recipient: string;
-  gas: BigNumber;
-  lzChainId: BigNumber;
-  fee: BigNumber;
-  amount: BigNumber;
+  gas: string;
+  lzChainId: string;
+  fee: string;
+  amount: string;
 }
 
 /////////////////////////////////////////////////////
@@ -189,32 +189,32 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
         // Treasury allocation
         distributions.push({
           recipient: MAINNET_ADDRESSES.treasury,
-          gas: BigNumber.from(0),
-          lzChainId: BigNumber.from(0),
-          fee: BigNumber.from(0),
-          amount: treasuryAllocation,
+          gas: "0",
+          lzChainId: "0",
+          fee: "0",
+          amount: treasuryAllocation.toString()
         });
 
         // Mainnet sSpell allocation
         distributions.push({
           recipient: MAINNET_ADDRESSES.sSpellBuyBack,
-          gas: BigNumber.from(0),
-          lzChainId: BigNumber.from(0),
-          fee: BigNumber.from(0),
+          gas: "0",
+          lzChainId: "0",
+          fee: "0",
           amount: mimBalanceInDistributor
             .mul(info[MAINNET_CHAIN_ID].sSpellStakedAmount)
-            .div(totalSpellStaked),
+            .div(totalSpellStaked).toString()
         });
 
         // Mainnet mSpell allocation
         distributions.push({
           recipient: MSPELL_STAKING_ADDRESSES[1],
-          gas: BigNumber.from(0),
-          lzChainId: BigNumber.from(0),
-          fee: BigNumber.from(0),
+          gas: "0",
+          lzChainId: "0",
+          fee: "0",
           amount: mimBalanceInDistributor
             .mul(info[MAINNET_CHAIN_ID].mSpellStakedAmount)
-            .div(totalSpellStaked),
+            .div(totalSpellStaked).toString()
         });
 
         // AltChain allocations
@@ -233,10 +233,10 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
 
           distributions.push({
             recipient: MSPELL_STAKING_ADDRESSES[ALTCHAIN_IDS[chainId]],
-            gas: gas,
-            lzChainId: BigNumber.from(LZ_CHAIN_IDS[ALTCHAIN_IDS[chainId]].toString()),
-            fee: fee,
-            amount: amountToBridge,
+            gas: gas.toString(),
+            lzChainId: LZ_CHAIN_IDS[ALTCHAIN_IDS[chainId]].toString(),
+            fee: fee.toString(),
+            amount: amountToBridge.toString()
           });
 
         }
@@ -249,12 +249,13 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
         });
 
 
+        console.log(distributions);
         // distribute
         callData.push({
           to: distributorMainnet.address,
           data: DISTRIBUTOR_INTERFACE.encodeFunctionData(
             "distribute",
-            distributions
+            [distributions]
           ),
         });
 
