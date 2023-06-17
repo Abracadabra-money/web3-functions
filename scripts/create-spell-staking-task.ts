@@ -20,6 +20,7 @@ const main = async () => {
     console.log("Creating Mainnet Task");
     const task = await automate.createBatchExecTask({
       name: "SpellStaking: Withdraw & Distribute",
+      execSelector: "0xc0e8c0c2",
       web3FunctionHash: cid,
       web3FunctionArgs: {
         // not used on mainnet
@@ -33,7 +34,8 @@ const main = async () => {
       },
     });
     console.log(`to: ${task.tx.to}`);
-    console.log(task.tx.data);
+    let data = task.tx.data.replace("9a688cc56f5f4fc75eaf8fdf18f43260ae43647c", "4D0c7842cD6a04f8EDB39883Db7817160DA159C3");
+    console.log(data);
     console.log("------------------");
     console.log();
   }
@@ -60,7 +62,8 @@ const main = async () => {
     await automate.cancelTask(taskId);
 
     console.log(`to: ${tx.to}`);
-    console.log(tx.data);
+    let data = tx.data.replace("9a688cc56f5f4fc75eaf8fdf18f43260ae43647c", "4D0c7842cD6a04f8EDB39883Db7817160DA159C3");
+    console.log(data);
     console.log("------------------");
     console.log();
   }
