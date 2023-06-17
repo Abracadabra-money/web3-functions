@@ -25,11 +25,10 @@ const main = async () => {
       web3FunctionArgs: {
         // not used on mainnet
         bridgingMinMIMAmount: "0",
-        altChainIntervalInSeconds: 0,
 
         // parameters
         treasuryPercentage: 50,
-        mainnetIntervalInSeconds: 86400, // 1x a day
+        intervalInSeconds: 86400, // 1x a day
         distributionMinMIMAmount: "100000000000000000000",
       },
     });
@@ -51,11 +50,10 @@ const main = async () => {
         // not used on altchain
         treasuryPercentage: 0,
         distributionMinMIMAmount: "0",
-        mainnetIntervalInSeconds: 0,
 
         // parameters
         bridgingMinMIMAmount: "50000000000000000000", // 50 MIM require to bridge
-        altChainIntervalInSeconds: 17280 // 5x a day
+        intervalInSeconds: 17280 // 5x a day
       },
     });
 

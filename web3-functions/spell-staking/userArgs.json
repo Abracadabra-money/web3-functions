@@ -2,6 +2,5 @@
   "treasuryPercentage": 50,
   "distributionMinMIMAmount": "100000000000000000000",
   "bridgingMinMIMAmount": "50000000000000000000",
-  "mainnetIntervalInSeconds": 86400,
-  "altChainIntervalInSeconds": 17280
+  "intervalInSeconds": 86400
 }

@@ -7,7 +7,6 @@
     "treasuryPercentage": "number",
     "distributionMinMIMAmount": "string",
     "bridgingMinMIMAmount": "string",
-    "mainnetIntervalInSeconds": "number",
-    "altChainIntervalInSeconds": "number"
+    "intervalInSeconds": "number"
   }
 }

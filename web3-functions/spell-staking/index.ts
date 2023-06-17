@@ -57,8 +57,6 @@ const MAINNET_ADDRESSES = {
 Web3Function.onRun(async (context: Web3FunctionContext) => {
   const { userArgs, multiChainProvider, gelatoArgs, storage } = context;
 
-  console.log("ChainId", gelatoArgs.chainId);
-
   const distributionMinMIMAmount = BigNumber.from(
     userArgs.distributionMinMIMAmount as string
   );
@@ -71,8 +69,7 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
     userArgs.bridgingMinMIMAmount as string
   );
 
-  const mainnetIntervalInSeconds = userArgs.mainnetIntervalInSeconds as number;
-  const altchainIntervalInSeconds = userArgs.altchainIntervalInSeconds as number;
+  const intervalInSeconds = userArgs.intervalInSeconds as number;
 
   const timestamp = (
     await multiChainProvider.chainId(MAINNET_CHAIN_ID).getBlock("latest")
@@ -131,182 +128,187 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
     gelatoArgs.chainId
   ].withdrawer.callStatic.withdraw();
 
+  console.log("Amount to withdraw", (amountToWithdraw.toString() / 1e18).toLocaleString(), "MIM");
+
   // The current amount plus the amount that will be withdrawn
   let mimBalanceInDistributor = amountToWithdraw.add(
     await mim.balanceOf(info[gelatoArgs.chainId].withdrawer.address)
   );
 
-  /////////////////////////////////////////////////
-  // Per-Chain Actions
-  /////////////////////////////////////////////////
-  // ~~~~~~~ Mainnet ~~~~~~~
-  if (gelatoArgs.chainId == MAINNET_CHAIN_ID) {
-    const lastMainnetRunTimestamp = Number(await storage.get("lastMainnetRun")) ?? 0;
+  console.log(`Amount to distribute: ${(mimBalanceInDistributor.toString() / 1e18).toLocaleString()} MIM`);
 
-    const run = async () => {
-      const distributorMainnet = new Contract(
-        MAINNET_ADDRESSES.distributor,
-        DISTRIBUTOR_ABI,
-        multiChainProvider.chainId(MAINNET_CHAIN_ID)
-      );
+  const lastRun = Number(await storage.get("lastRun")) ?? 0;
 
-      let totalSpellStaked = BigNumber.from(0);
+  const mainnetRun = async () => {
+    const distributorMainnet = new Contract(
+      MAINNET_ADDRESSES.distributor,
+      DISTRIBUTOR_ABI,
+      multiChainProvider.chainId(MAINNET_CHAIN_ID)
+    );
 
-      // Fetch staked amounts
-      await Promise.all(
-        CHAIN_IDS.map(async (chainId) => {
-          // mSPELL staked amount
-          info[chainId].mSpellStakedAmount = await info[chainId].spell.balanceOf(
-            MSPELL_STAKING_ADDRESSES[chainId]
-          );
+    let totalSpellStaked = BigNumber.from(0);
 
-          // sSPELL staked amount (mainnet only)
-          if (chainId == MAINNET_CHAIN_ID) {
-            info[chainId].sSpellStakedAmount = await info[
-              chainId
-            ].spell.balanceOf(MAINNET_ADDRESSES.sSpell);
-            totalSpellStaked = totalSpellStaked.add(
-              info[chainId].sSpellStakedAmount
-            );
-          }
+    // Fetch staked amounts
+    await Promise.all(
+      CHAIN_IDS.map(async (chainId) => {
+        // mSPELL staked amount
+        info[chainId].mSpellStakedAmount = await info[chainId].spell.balanceOf(
+          MSPELL_STAKING_ADDRESSES[chainId]
+        );
 
+        // sSPELL staked amount (mainnet only)
+        if (chainId == MAINNET_CHAIN_ID) {
+          info[chainId].sSpellStakedAmount = await info[
+            chainId
+          ].spell.balanceOf(MAINNET_ADDRESSES.sSpell);
           totalSpellStaked = totalSpellStaked.add(
-            info[chainId].mSpellStakedAmount
+            info[chainId].sSpellStakedAmount
           );
-        })
-      );
-
-      // Distribution
-      if (mimBalanceInDistributor.gte(distributionMinMIMAmount) && timestamp) {
-        const distributions: Distribution[] = [];
-
-        const treasuryAllocation = mimBalanceInDistributor
-          .mul(treasuryPercentage)
-          .div(TREASURY_FEE_PRECISION);
-
-        mimBalanceInDistributor = mimBalanceInDistributor.sub(treasuryAllocation);
-
-        // Treasury allocation
-        distributions.push({
-          recipient: MAINNET_ADDRESSES.treasury,
-          gas: "0",
-          lzChainId: "0",
-          fee: "0",
-          amount: treasuryAllocation.toString()
-        });
-
-        // Mainnet sSpell allocation
-        distributions.push({
-          recipient: MAINNET_ADDRESSES.sSpellBuyBack,
-          gas: "0",
-          lzChainId: "0",
-          fee: "0",
-          amount: mimBalanceInDistributor
-            .mul(info[MAINNET_CHAIN_ID].sSpellStakedAmount)
-            .div(totalSpellStaked).toString()
-        });
-
-        // Mainnet mSpell allocation
-        distributions.push({
-          recipient: MSPELL_STAKING_ADDRESSES[1],
-          gas: "0",
-          lzChainId: "0",
-          fee: "0",
-          amount: mimBalanceInDistributor
-            .mul(info[MAINNET_CHAIN_ID].mSpellStakedAmount)
-            .div(totalSpellStaked).toString()
-        });
-
-        // AltChain allocations
-        for (const chainId in ALTCHAIN_IDS) {
-          const amountToBridge = mimBalanceInDistributor
-            .mul(info[ALTCHAIN_IDS[chainId]].mSpellStakedAmount)
-            .div(totalSpellStaked);
-
-          // Estimate bridging fee
-          const { fee, gas } = await distributorMainnet.estimateBridgingFee(
-            amountToBridge.toString(),
-            LZ_CHAIN_IDS[ALTCHAIN_IDS[chainId]],
-            MSPELL_STAKING_ADDRESSES[ALTCHAIN_IDS[chainId]]
-          ); // use default minDstGasLookup
-
-
-          distributions.push({
-            recipient: MSPELL_STAKING_ADDRESSES[ALTCHAIN_IDS[chainId]],
-            gas: gas.toString(),
-            lzChainId: LZ_CHAIN_IDS[ALTCHAIN_IDS[chainId]].toString(),
-            fee: fee.toString(),
-            amount: amountToBridge.toString()
-          });
-
         }
 
-        // withdraw
-        callData.push({
-          to: WITHDRAWER_ADDRESS,
-          data: WITHDRAWER_INTERFACE.encodeFunctionData("withdraw", []),
-        });
-
-        // distribute
-        callData.push({
-          to: distributorMainnet.address,
-          data: DISTRIBUTOR_INTERFACE.encodeFunctionData(
-            "distribute",
-            [distributions]
-          ),
-        });
-
-      } else {
-        console.log(
-          `Not enough MIM in distributor. Minimum amount: ${distributionMinMIMAmount.toString()}. Current amount: ${mimBalanceInDistributor.toString()}`
+        totalSpellStaked = totalSpellStaked.add(
+          info[chainId].mSpellStakedAmount
         );
-      }
-    };
+      })
+    );
 
-    if (timestamp > lastMainnetRunTimestamp + mainnetIntervalInSeconds) {
-      await run();
-      await storage.set("lastMainnetRun", timestamp.toString());
-    }
-  }
+    // Distribution
+    if (mimBalanceInDistributor.gte(distributionMinMIMAmount) && timestamp) {
+      const distributions: Distribution[] = [];
 
-  // ~~~~~~~ AltChains ~~~~~~~
-  else {
-    const lastAltChainRun = Number(await storage.get("lastAltChainRun")) ?? 0;
+      const treasuryAllocation = mimBalanceInDistributor
+        .mul(treasuryPercentage)
+        .div(TREASURY_FEE_PRECISION);
 
-    const run = async () => {
-      if (mimBalanceInDistributor.gte(bridgingMinMIMAmount)) {
+      mimBalanceInDistributor = mimBalanceInDistributor.sub(treasuryAllocation);
+
+      // Treasury allocation
+      distributions.push({
+        recipient: MAINNET_ADDRESSES.treasury,
+        gas: "0",
+        lzChainId: "0",
+        fee: "0",
+        amount: treasuryAllocation.toString()
+      });
+
+      // Mainnet sSpell allocation
+      distributions.push({
+        recipient: MAINNET_ADDRESSES.sSpellBuyBack,
+        gas: "0",
+        lzChainId: "0",
+        fee: "0",
+        amount: mimBalanceInDistributor
+          .mul(info[MAINNET_CHAIN_ID].sSpellStakedAmount)
+          .div(totalSpellStaked).toString()
+      });
+
+      // Mainnet mSpell allocation
+      distributions.push({
+        recipient: MSPELL_STAKING_ADDRESSES[1],
+        gas: "0",
+        lzChainId: "0",
+        fee: "0",
+        amount: mimBalanceInDistributor
+          .mul(info[MAINNET_CHAIN_ID].mSpellStakedAmount)
+          .div(totalSpellStaked).toString()
+      });
+
+      // AltChain allocations
+      for (const chainId in ALTCHAIN_IDS) {
+        const amountToBridge = mimBalanceInDistributor
+          .mul(info[ALTCHAIN_IDS[chainId]].mSpellStakedAmount)
+          .div(totalSpellStaked);
+
         // Estimate bridging fee
-        const { fee, gas } = await info[
-          gelatoArgs.chainId
-        ].withdrawer.estimateBridgingFee(mimBalanceInDistributor, 0); // use default minDstGasLookup
+        const { fee, gas } = await distributorMainnet.estimateBridgingFee(
+          amountToBridge.toString(),
+          LZ_CHAIN_IDS[ALTCHAIN_IDS[chainId]],
+          MSPELL_STAKING_ADDRESSES[ALTCHAIN_IDS[chainId]]
+        ); // use default minDstGasLookup
 
-        // withdraw
-        callData.push({
-          to: WITHDRAWER_ADDRESS,
-          data: WITHDRAWER_INTERFACE.encodeFunctionData("withdraw", []),
+        distributions.push({
+          recipient: MSPELL_STAKING_ADDRESSES[ALTCHAIN_IDS[chainId]],
+          gas: gas.toString(),
+          lzChainId: LZ_CHAIN_IDS[ALTCHAIN_IDS[chainId]].toString(),
+          fee: fee.toString(),
+          amount: amountToBridge.toString()
         });
 
-        // bridge
-        callData.push({
-          to: WITHDRAWER_ADDRESS,
-          data: WITHDRAWER_INTERFACE.encodeFunctionData("bridge", [
-            mimBalanceInDistributor,
-            fee,
-            gas,
-          ]),
-        });
-      } else {
-        console.log(
-          `Not enough MIM in distributor. Minimum amount: ${bridgingMinMIMAmount.toString()}. Current amount after withdraw: ${mimBalanceInDistributor.toString()}`
-        );
       }
-    };
 
-    if (timestamp > lastAltChainRun + altchainIntervalInSeconds) {
-      await run();
-      await storage.set("lastAltChainRun", timestamp.toString());
+      // withdraw
+      callData.push({
+        to: WITHDRAWER_ADDRESS,
+        data: WITHDRAWER_INTERFACE.encodeFunctionData("withdraw", []),
+      });
+
+      // distribute
+      callData.push({
+        to: distributorMainnet.address,
+        data: DISTRIBUTOR_INTERFACE.encodeFunctionData(
+          "distribute",
+          [distributions]
+        ),
+      });
+
+    } else {
+      console.log(
+        `Not enough MIM in distributor. Minimum amount: ${distributionMinMIMAmount.toString()}. Current amount: ${mimBalanceInDistributor.toString()}`
+      );
+    }
+  };
+
+  const altchainRun = async () => {
+    if (mimBalanceInDistributor.gte(bridgingMinMIMAmount)) {
+      // Estimate bridging fee
+      const { fee, gas } = await info[
+        gelatoArgs.chainId
+      ].withdrawer.estimateBridgingFee(mimBalanceInDistributor); // use default minDstGasLookup
+
+      // withdraw
+      callData.push({
+        to: WITHDRAWER_ADDRESS,
+        data: WITHDRAWER_INTERFACE.encodeFunctionData("withdraw", []),
+      });
+
+      // bridge
+      callData.push({
+        to: WITHDRAWER_ADDRESS,
+        data: WITHDRAWER_INTERFACE.encodeFunctionData("bridge", [
+          mimBalanceInDistributor,
+          fee,
+          gas,
+        ]),
+      });
+    } else {
+      console.log(
+        `Not enough MIM in distributor. Minimum amount: ${bridgingMinMIMAmount.toString()}. Current amount after withdraw: ${mimBalanceInDistributor.toString()}`
+      );
+    }
+  };
+
+  if (timestamp > lastRun + intervalInSeconds) {
+    if (gelatoArgs.chainId == MAINNET_CHAIN_ID) {
+      await mainnetRun();
+    } else {
+      await altchainRun();
+    }
+  } else {
+    console.log(
+      `Last run was ${timestamp - lastRun} seconds ago. Skipping run.`
+    );
+  }
+
+  // Nothing to do yet
+  if (callData.length == 0) {
+    return {
+      canExec: false,
+      callData: [],
     }
   }
+
+  // Update last runs and execute
+  await storage.set("lastRun", timestamp.toString());
 
   return {
     canExec: true,
