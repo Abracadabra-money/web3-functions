@@ -133,7 +133,7 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
 
   // The current amount plus the amount that will be withdrawn
   let mimBalanceInDistributor = amountToWithdraw.add(
-    mim.balanceOf(info[gelatoArgs.chainId].withdrawer.address)
+    await mim.balanceOf(info[gelatoArgs.chainId].withdrawer.address)
   );
 
   /////////////////////////////////////////////////
