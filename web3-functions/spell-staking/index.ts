@@ -220,29 +220,34 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
         // AltChain allocations
         for (const chainId in ALTCHAIN_IDS) {
           const amountToBridge = mimBalanceInDistributor
-            .mul(info[chainId].mSpellStakedAmount)
+            .mul(info[ALTCHAIN_IDS[chainId]].mSpellStakedAmount)
             .div(totalSpellStaked);
 
           // Estimate bridging fee
           const { fee, gas } = await distributorMainnet.estimateBridgingFee(
-            amountToBridge,
-            0
+            amountToBridge.toString(),
+            LZ_CHAIN_IDS[ALTCHAIN_IDS[chainId]],
+            MSPELL_STAKING_ADDRESSES[ALTCHAIN_IDS[chainId]]
           ); // use default minDstGasLookup
 
+
           distributions.push({
-            recipient: MSPELL_STAKING_ADDRESSES[1],
+            recipient: MSPELL_STAKING_ADDRESSES[ALTCHAIN_IDS[chainId]],
             gas: gas,
-            lzChainId: BigNumber.from(LZ_CHAIN_IDS[chainId].toString()),
+            lzChainId: BigNumber.from(LZ_CHAIN_IDS[ALTCHAIN_IDS[chainId]].toString()),
             fee: fee,
             amount: amountToBridge,
           });
+
         }
+
 
         // withdraw
         callData.push({
           to: WITHDRAWER_ADDRESS,
           data: WITHDRAWER_INTERFACE.encodeFunctionData("withdraw", []),
         });
+
 
         // distribute
         callData.push({
@@ -252,6 +257,7 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
             distributions
           ),
         });
+
       } else {
         console.log(
           `Not enough MIM in distributor. Minimum amount: ${distributionMinMIMAmount.toString()}. Current amount: ${mimBalanceInDistributor.toString()}`
