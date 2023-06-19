@@ -27,7 +27,7 @@ const main = async () => {
 
         // parameters
         treasuryPercentage: 50,
-        intervalInSeconds: 86400, // 1x a day
+        intervalInSeconds: 201600, // 3x a week
         distributionMinMIMAmount: "100000000000000000000",
       },
     });
@@ -52,7 +52,7 @@ const main = async () => {
 
         // parameters
         bridgingMinMIMAmount: "50000000000000000000", // 50 MIM require to bridge
-        intervalInSeconds: 17280 // 5x a day
+        intervalInSeconds: 201600 // 3x a week
       },
     });
 
