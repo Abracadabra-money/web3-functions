@@ -49,9 +49,9 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
       return { canExec: false, message: `not enough mim` };
     }
     fromTokenAmount =
-      fromTokenAmountBN <= utils.parseEther("50000")
+      fromTokenAmountBN <= utils.parseEther("10000")
         ? fromTokenAmountBN.toString()
-        : utils.parseEther("50000").toString();
+        : utils.parseEther("10000").toString();
   } catch (err) {
     return { canExec: false, message: `Rpc call failed` };
   }
