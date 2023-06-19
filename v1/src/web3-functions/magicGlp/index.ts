@@ -3,7 +3,7 @@ import {
   Web3FunctionContext,
 } from "@gelatonetwork/web3-functions-sdk";
 import { BigNumber, Contract } from "ethers";
-import { SimulationUrlBuilder } from "../../utils/tenderly";
+import { SimulationUrlBuilder } from "../../../../utils/tenderly";
 
 const HARVESTER_ABI = [
   "function lastExecution() external view returns(uint256)",
@@ -94,7 +94,7 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
   // Check if it's ready for a new update
   if (!testing && timestamp < nextUpdate) {
     return { canExec: false, message: `Time not elapsed` };
-  } else if(testing) {
+  } else if (testing) {
     console.log("Skipping timestamp check...");
   }
 

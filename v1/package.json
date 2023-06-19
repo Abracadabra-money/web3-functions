@@ -11,7 +11,6 @@
     "lint": "eslint --cache .",
     "test:magicglp-arb": "dotenv cross-var \"PROVIDER_URL=%ARBITRUM_PROVIDER_URL% SECRETS_TESTING=true w3f test src/web3-functions/magicGlp/index.ts --show-logs --chain-id=42161\"",
     "test:magicglp-avax": "dotenv cross-var \"PROVIDER_URL=%AVALANCHE_PROVIDER_URL% SECRETS_TESTING=true w3f test src/web3-functions/magicGlp/index.ts --show-logs --chain-id=43114\"",
-    "test:magiclevel": "dotenv cross-var \"PROVIDER_URL=%BSC_PROVIDER_URL% SECRETS_TESTING=true w3f test src/web3-functions/magicLevel/index.ts --show-logs --chain-id=56\"",
     "test:spellswapper": "dotenv cross-var \"w3f test src/web3-functions/spell_swapper/index.ts --show-logs --chain-id=1\"",
     "test:interest": "dotenv cross-var \"w3f test src/web3-functions/interest/index.ts --show-logs --chain-id=9999999\"",
     "test:magicape": "dotenv cross-var \"w3f test src/web3-functions/magicApe/index.ts --show-logs --chain-id=9999999\"",

@@ -9,6 +9,8 @@ import "@foundry-rs/hardhat-anvil";
 import * as dotenv from "dotenv";
 dotenv.config({ path: __dirname + "/.env" });
 
+const PRIVATE_KEY = false; //process.env.PRIVATE_KEY;
+
 const config: HardhatUserConfig = {
   w3f: {
     rootDir: "./web3-functions",
@@ -20,6 +22,7 @@ const config: HardhatUserConfig = {
       "fantom",
       "optimism",
       "polygon",
+      "bsc"
     ], //(multiChainProvider) injects provider for these networks
   },
   defaultNetwork: "ethereum",
@@ -30,37 +33,43 @@ const config: HardhatUserConfig = {
       launch: true,
       chainId: 1,
       forkUrl: "https://eth-rpc.gateway.pokt.network",
+      accounts: PRIVATE_KEY ? [PRIVATE_KEY] : [],
     },
     ethereum: {
       chainId: 1,
       url: "https://eth-rpc.gateway.pokt.network",
-      accounts: [],
+      accounts: PRIVATE_KEY ? [PRIVATE_KEY] : [],
     },
     avalanche: {
       url: "https://api.avax.network/ext/bc/C/rpc",
       chainId: 43114,
-      accounts: [],
+      accounts: PRIVATE_KEY ? [PRIVATE_KEY] : [],
     },
     arbitrum: {
       chainId: 42161,
       url: "https://arb1.arbitrum.io/rpc",
-      accounts: [],
+      accounts: PRIVATE_KEY ? [PRIVATE_KEY] : [],
     },
     fantom: {
       chainId: 250,
       url: `https://rpcapi.fantom.network/`,
-      accounts: [],
+      accounts: PRIVATE_KEY ? [PRIVATE_KEY] : [],
     },
     optimism: {
       chainId: 10,
       url: "https://mainnet.optimism.io",
-      accounts: [],
+      accounts: PRIVATE_KEY ? [PRIVATE_KEY] : [],
     },
     polygon: {
       chainId: 137,
       url: "https://rpc-mainnet.maticvigil.com",
-      accounts: [],
+      accounts: PRIVATE_KEY ? [PRIVATE_KEY] : [],
     },
+    bsc: {
+      chainId: 56,
+      url: "https://bsc.publicnode.com",
+      accounts: PRIVATE_KEY ? [PRIVATE_KEY] : [],
+    }
   },
 };
 
