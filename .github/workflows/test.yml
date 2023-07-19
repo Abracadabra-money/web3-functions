@@ -7,7 +7,8 @@ env:
   ARBITRUM_PROVIDER_URL: https://1rpc.io/arb
   OPTIMISM_PROVIDER_URL: https://endpoints.omniatech.io/v1/op/mainnet/public
   MAINNET_PROVIDER_URL: https://eth.llamarpc.com
-
+  ZEROX_API_KEY: ${{ secrets.ZEROX_API_KEY }}
+  
 jobs:
   test:
     runs-on: ubuntu-latest

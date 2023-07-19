@@ -18,28 +18,34 @@ const TOKEN_ABI = [
 const SWAPPER_ABI = ["function swapMimForSpell1Inch(address,bytes) external"];
 
 Web3Function.onRun(async (context: Web3FunctionContext) => {
-  const { userArgs, gelatoArgs, storage, provider } = context;
+  const { userArgs, gelatoArgs, storage, multiChainProvider } = context;
+
+  const provider = multiChainProvider.default();
 
   // Retrieve Last oracle update time
-  const execAddress =
-    (userArgs.execAddress as string) ??
-    "0xdFE1a5b757523Ca6F7f049ac02151808E6A52111";
-  const zeroExApiBaseUrl = userArgs.zeroExApiBaseUrl ?? "https://api.0x.org";
-  const chainId = String(gelatoArgs.chainId) ?? "1";
-  const fromTokenAddress = "0x99D8a9C45b2ecA8864373A26D1459e3Dff1e17F3";
-  const toTokenAddress = "0x090185f2135308BaD17527004364eBcC2D37e5F6";
+  const execAddress = userArgs.execAddress as string;
+  const zeroExApiBaseUrl = userArgs.zeroExApiBaseUrl;
+  const fromTokenAddress = "0x99D8a9C45b2ecA8864373A26D1459e3Dff1e17F3"; // MIM
+  const toTokenAddress = "0x090185f2135308BaD17527004364eBcC2D37e5F6"; // SPELL
 
   const lastTimestampStr = (await storage.get("lastTimestamp")) ?? "0";
   const lastTimestamp = parseInt(lastTimestampStr);
 
+  const apiKey = await context.secrets.get("ZEROX_API_KEY");
+  if (!apiKey) {
+    return { canExec: false, message: `ZEROX_API_KEY not set in secrets` };
+  }
+
   let fromTokenAmount;
   let mim;
 
-  const timestamp = gelatoArgs.blockTime;
+  const timestamp = (
+    await provider.getBlock("latest")
+  ).timestamp;
 
   if (timestamp < lastTimestamp + 3600) {
     // Update storage to persist your current state (values must be cast to string)
-    return { canExec: false, message: `wait a bit longer` };
+    return { canExec: false, message: `Time not elapsed` };
   }
 
   try {
@@ -56,9 +62,19 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
     return { canExec: false, message: `Rpc call failed` };
   }
 
+  const api = ky.extend({
+    hooks: {
+      beforeRequest: [
+        request => {
+          request.headers.set('0x-api-key', apiKey);
+        }
+      ]
+    }
+  });
+
   const quoteApi = `${zeroExApiBaseUrl}/swap/v1/quote?buyToken=${toTokenAddress}&sellToken=${fromTokenAddress}&sellAmount=${fromTokenAmount.toString()}`;
   logInfo(quoteApi);
-  const quoteApiRes: any = await ky.get(quoteApi).json();
+  const quoteApiRes: any = await api.get(quoteApi).json();
 
   if (!quoteApiRes) throw Error("Get quote api failed");
   const quoteResObj = quoteApiRes;
@@ -87,10 +103,13 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
 
   return {
     canExec: true,
-    callData: swapper.interface.encodeFunctionData("swapMimForSpell1Inch", [
-      routerAddress,
-      data,
-    ]),
+    callData: [{
+      to: execAddress,
+      data: swapper.interface.encodeFunctionData("swapMimForSpell1Inch", [
+        routerAddress,
+        data,
+      ])
+    }],
   };
 });
 
