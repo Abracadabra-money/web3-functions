@@ -1,0 +1,9 @@
+{
+    "execAddress": "0x762d06bB0E45f5ACaEEA716336142a39376E596E",
+    "zeroExApiBaseUrl": "https://api.0x.org",
+    "strategy": "0x186d76147A226A51a112Bb1958e8b755ab9FD1aF",
+    "intervalInSeconds": 86400,
+    "rewardSwappingSlippageInBips": 200,
+    "maxBentoBoxAmountIncreaseInBips": 1,
+    "maxBentoBoxChangeAmountInBips": 1000
+}

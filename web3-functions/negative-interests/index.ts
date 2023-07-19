@@ -12,27 +12,20 @@ const LENS_ABI = [
 ]
 
 Web3Function.onRun(async (context: Web3FunctionContext) => {
-  const { userArgs, gelatoArgs, storage, provider } = context;
+  const { userArgs, gelatoArgs, storage, multiChainProvider } = context;
+  const provider = multiChainProvider.default();
 
-  const zeroExApiBaseUrl = userArgs.zeroExApiBaseUrl ?? "https://api.0x.org";
-  let intervalInSeconds = (userArgs.intervalInSeconds as number) ?? 86400;
+  const zeroExApiBaseUrl = userArgs.zeroExApiBaseUrl as string;
+  let intervalInSeconds = userArgs.intervalInSeconds as number;
 
   // WBTC strat: 0x186d76147A226A51a112Bb1958e8b755ab9FD1aF
   // WETH strat: 0xcc0d7aF1f809dD3A589756Bba36Be04D19e9C6c5
-  const strategy =
-    (userArgs.strategy as string) ??
-    "0xcc0d7aF1f809dD3A589756Bba36Be04D19e9C6c5";
-  const rewardSwappingSlippageInBips =
-    (userArgs.rewardSwappingSlippageInBips as number) ?? 200;
-  const maxBentoBoxAmountIncreaseInBips =
-    (userArgs.maxBentoBoxAmountIncreaseInBips as number) ?? 1;
-  const maxBentoBoxChangeAmountInBips =
-    (userArgs.maxBentoBoxChangeAmountInBips as number) ?? 1000;
+  const strategy = userArgs.strategy as string;
+  const execAddress = userArgs.execAddress as string;
+  const rewardSwappingSlippageInBips = userArgs.rewardSwappingSlippageInBips as number;
+  const maxBentoBoxAmountIncreaseInBips = userArgs.maxBentoBoxAmountIncreaseInBips as number;
+  const maxBentoBoxChangeAmountInBips = userArgs.maxBentoBoxChangeAmountInBips as number;
   const lens = "0xfd2387105ee3ccb0d96b7de2d86d26344f17787b";
-
-  if (gelatoArgs.chainId == 9999999) {
-    intervalInSeconds = 0;
-  }
 
   const BIPS = 10_000;
 
@@ -50,10 +43,13 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
   const lastTimestamp = parseInt(lastTimestampStr);
 
   // Check if it's ready for a new update
-  const timestamp = gelatoArgs.blockTime;
+  const timestamp = (
+    await multiChainProvider.chainId(1).getBlock("latest")
+  ).timestamp;
+
   console.log(`Next update: ${lastTimestamp + intervalInSeconds}`);
   if (timestamp < lastTimestamp + intervalInSeconds) {
-    return { canExec: false, message: `Time not elapsed` };
+    return { canExec: false, message: "Time not elapsed" };
   }
 
   const strategyToken = await strategyContract.strategyToken();
@@ -73,9 +69,24 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
   const swapData = new Array<string>(1);
   swapData[0] = "0x0000000000000000000000000000000000000000"
 
+  const apiKey = await context.secrets.get("ZEROX_API_KEY");
+  if (!apiKey) {
+    return { canExec: false, message: "ZEROX_API_KEY not set in secrets" };
+  }
+
+  const api = ky.extend({
+    hooks: {
+      beforeRequest: [
+        request => {
+          request.headers.set('0x-api-key', apiKey);
+        }
+      ]
+    }
+  });
+
   if (totalPendingFees.gt(BigNumber.from(0))) {
     const quoteApi = `${zeroExApiBaseUrl}/swap/v1/quote?buyToken=${mim}&sellToken=${String(strategyToken)}&sellAmount=${totalPendingFees.toString()}`;
-    const quoteApiRes: any = await ky.get(quoteApi).json();
+    const quoteApiRes: any = await api.get(quoteApi).json();
 
     if (!quoteApiRes) throw Error("Get quote api failed");
     const quoteResObj = quoteApiRes;
@@ -109,21 +120,22 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
   const iface = new Interface([
     "function run(address,uint256,uint256,bytes[]) external",
   ]);
-  const callData = iface.encodeFunctionData("run", [
-    strategy,
-    maxBentoBoxAmountIncreaseInBips.toString(),
-    maxBentoBoxChangeAmountInBips.toString(),
-    swapData.length > 0 ? swapData : "[]",
-  ]);
+  const callData = {
+    to: execAddress,
+    data: iface.encodeFunctionData("run", [
+      strategy,
+      maxBentoBoxAmountIncreaseInBips.toString(),
+      maxBentoBoxChangeAmountInBips.toString(),
+      swapData.length > 0 ? swapData : "[]",
+    ])
+  };
 
-  if (gelatoArgs.chainId == 9999999) {
-    console.log(
-      `https://dashboard.tenderly.co/abracadabra/magic-internet-money/simulator/new?contractFunction=0xe766b1f5&value=0&contractAddress=0x762d06bB0E45f5ACaEEA716336142a39376E596E&rawFunctionInput=${callData}&network=1&from=0x4d0c7842cd6a04f8edb39883db7817160da159c3&block=&blockIndex=0&headerBlockNumber=&headerTimestamp=`
-    );
-    //console.log(callData);
-  }
+  console.log(
+    `https://dashboard.tenderly.co/abracadabra/magic-internet-money/simulator/new?contractFunction=0xe766b1f5&value=0&contractAddress=0x762d06bB0E45f5ACaEEA716336142a39376E596E&rawFunctionInput=${callData}&network=1&from=0x4d0c7842cd6a04f8edb39883db7817160da159c3&block=&blockIndex=0&headerBlockNumber=&headerTimestamp=`
+  );
+  //console.log(callData);
 
-  return { canExec: true, callData, message: "" };
+  return { canExec: true, callData: [callData] };
 });
 
 function logInfo(msg: string): void {

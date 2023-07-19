@@ -18,7 +18,7 @@ const TOKEN_ABI = [
 const SWAPPER_ABI = ["function swapMimForSpell1Inch(address,bytes) external"];
 
 Web3Function.onRun(async (context: Web3FunctionContext) => {
-  const { userArgs, gelatoArgs, storage, multiChainProvider } = context;
+  const { userArgs, storage, multiChainProvider } = context;
 
   const provider = multiChainProvider.default();
 
@@ -33,7 +33,7 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
 
   const apiKey = await context.secrets.get("ZEROX_API_KEY");
   if (!apiKey) {
-    return { canExec: false, message: `ZEROX_API_KEY not set in secrets` };
+    return { canExec: false, message: "ZEROX_API_KEY not set in secrets" };
   }
 
   let fromTokenAmount;
@@ -45,7 +45,7 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
 
   if (timestamp < lastTimestamp + 3600) {
     // Update storage to persist your current state (values must be cast to string)
-    return { canExec: false, message: `Time not elapsed` };
+    return { canExec: false, message: "Time not elapsed" };
   }
 
   try {
@@ -59,7 +59,7 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
         ? fromTokenAmountBN.toString()
         : utils.parseEther("10000").toString();
   } catch (err) {
-    return { canExec: false, message: `Rpc call failed` };
+    return { canExec: false, message: "Rpc call failed" };
   }
 
   const api = ky.extend({

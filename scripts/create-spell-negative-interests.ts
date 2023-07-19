@@ -4,7 +4,7 @@ import { AutomateSDK, Web3Function } from "@gelatonetwork/automate-sdk";
 const { ethers, w3f } = hre;
 
 const main = async () => {
-  const spellSwapperW3f = w3f.get("spell-swapper");
+  const spellNegativeInterests = w3f.get("negative-interests");
 
   const [deployer] = await ethers.getSigners();
   const chainId = (await ethers.provider.getNetwork()).chainId;
@@ -13,17 +13,33 @@ const main = async () => {
 
   // Deploy Web3Function on IPFS
   console.log("Deploying Web3Function on IPFS...");
-  const cid = await spellSwapperW3f.deploy();
+  const cid = await spellNegativeInterests.deploy();
   console.log(`Web3Function IPFS CID: ${cid}`);
 
-  {
-    console.log("Creating Mainnet Task");
+  const config = [
+    {
+      name: "NegativeInterests: WBTC",
+      strategy: "0x186d76147A226A51a112Bb1958e8b755ab9FD1aF",
+    },
+    {
+      name: "NegativeInterests: WETH",
+      strategy: "0xcc0d7aF1f809dD3A589756Bba36Be04D19e9C6c5",
+    },
+  ];
+
+  for (const { name, strategy } of config) {
+    console.log(`Creating ${name} Task`);
     const task = await automate.createBatchExecTask({
-      name: "SpellSwapping",
+      name,
       web3FunctionHash: cid,
       web3FunctionArgs: {
-        execAddress: "0xdFE1a5b757523Ca6F7f049ac02151808E6A52111",
-        zeroExApiBaseUrl: "https://api.0x.org"
+        execAddress: "0x762d06bB0E45f5ACaEEA716336142a39376E596E",
+        zeroExApiBaseUrl: "https://api.0x.org",
+        strategy,
+        intervalInSeconds: 86400,
+        rewardSwappingSlippageInBips: 200,
+        maxBentoBoxAmountIncreaseInBips: 1,
+        maxBentoBoxChangeAmountInBips: 1000
       },
     });
     console.log(`to: ${task.tx.to}`);
