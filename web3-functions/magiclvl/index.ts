@@ -118,10 +118,25 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
     return { canExec: false, message: `no rewards yet`, callData: [] };
   }
 
+  const apiKey = await context.secrets.get("ZEROX_API_KEY");
+  if (!apiKey) {
+    return { canExec: false, message: "ZEROX_API_KEY not set in secrets" };
+  }
+
+  const api = ky.extend({
+    hooks: {
+      beforeRequest: [
+        request => {
+          request.headers.set('0x-api-key', apiKey);
+        }
+      ]
+    }
+  });
+
   try {
     const url = `https://bsc.api.0x.org/swap/v1/quote?buyToken=${wbnbToken}&sellToken=${lvlTokensAddress}&sellAmount=${lvlTokenAmount}`;
     console.log("0x api url", url);
-    const response: any = await ky
+    const response: any = await api
       .get(url, { timeout: 5_000, retry: 0 })
       .json();
     wbnbTokenAmount = BigNumber.from(response["buyAmount"]);

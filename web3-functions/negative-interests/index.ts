@@ -131,7 +131,7 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
   };
 
   console.log(
-    `https://dashboard.tenderly.co/abracadabra/magic-internet-money/simulator/new?contractFunction=0xe766b1f5&value=0&contractAddress=0x762d06bB0E45f5ACaEEA716336142a39376E596E&rawFunctionInput=${callData}&network=1&from=0x4d0c7842cd6a04f8edb39883db7817160da159c3&block=&blockIndex=0&headerBlockNumber=&headerTimestamp=`
+    `https://dashboard.tenderly.co/abracadabra/magic-internet-money/simulator/new?contractFunction=0xe766b1f5&value=0&contractAddress=${callData.to}&rawFunctionInput=${callData.data}&network=1&from=0x4d0c7842cd6a04f8edb39883db7817160da159c3&block=&blockIndex=0&headerBlockNumber=&headerTimestamp=`
   );
   //console.log(callData);
 
