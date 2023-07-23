@@ -12,7 +12,7 @@ const LENS_ABI = [
 ]
 
 Web3Function.onRun(async (context: Web3FunctionContext) => {
-  const { userArgs, gelatoArgs, storage, multiChainProvider } = context;
+  const { userArgs, storage, multiChainProvider } = context;
   const provider = multiChainProvider.default();
 
   const zeroExApiBaseUrl = userArgs.zeroExApiBaseUrl as string;

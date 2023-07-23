@@ -10,7 +10,7 @@
     "format": "prettier --write */**/*.*{js,json,md,ts}",
     "format:check": "prettier --check */**/*.*{js,json,md,ts}",
     "lint:ts": "eslint -c .eslintrc.json --ext \"**/*.ts\" \"**/*.test.ts\"",
-    "test": "yarn test:spell-staking && yarn test:magiclvl && yarn test:spell-swapper",
+    "test": "yarn test:spell-staking && yarn test:magiclvl && yarn test:spell-swapper && yarn test:negative-interests",
     "create-task:spell-staking": "killall -9 anvil; hardhat run ./scripts/create-spell-staking-task.ts --network anvil",
     "create-task:magiclvl": "hardhat run ./scripts/create-magiclvl-task.ts --network anvil",
     "create-task:spellswapper": "hardhat run ./scripts/create-spell-swapper-task.ts --network anvil",

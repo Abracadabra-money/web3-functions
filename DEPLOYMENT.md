@@ -14,4 +14,4 @@
 | MagicLevel Mezzanine  | [task](https://beta.app.gelato.network/task/0x255dc869c34aa53f8a0d944f458aacf05f37e5ff53eb797d9c8bce1cba399685?chainId=56) |
 | MagicLevel Junior     | [task](https://beta.app.gelato.network/task/0x464be4d56d973a9b8597543d750d45da5cd37970456351c76f45cdfe3fe49de4?chainId=56) |
 | Distributor Mainnet   | [task](https://beta.app.gelato.network/task/0x89b961b023a535a62e1020775d1c290dfd400cd7084f964b89773dee18396acb?chainId=1) |
-| Withdrawer Arbitrum   | [task](https://beta.app.gelato.network/task/0xbe303dcfc12e4f8adc4b90052946fb72fa84ac1235a623df686e984016080c6d?chainId=42161) |
+| Withdrawer Arbitrum   | [task](https://beta.app.gelato.network/task/0x4db2dd79637c5942307ebce48b85fa921c9229d3627d8790c1ed4d0052cfb4d2?chainId=42161) |
