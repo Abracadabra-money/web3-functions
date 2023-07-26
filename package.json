@@ -10,11 +10,12 @@
     "format": "prettier --write */**/*.*{js,json,md,ts}",
     "format:check": "prettier --check */**/*.*{js,json,md,ts}",
     "lint:ts": "eslint -c .eslintrc.json --ext \"**/*.ts\" \"**/*.test.ts\"",
-    "test": "yarn test:spell-staking && yarn test:magiclvl && yarn test:spell-swapper && yarn test:negative-interests",
+    "test": "yarn test:spell-staking && yarn test:magiclvl && yarn test:spell-swapper && yarn test:negative-interests && yarn test:stargate",
     "create-task:spell-staking": "killall -9 anvil; hardhat run ./scripts/create-spell-staking-task.ts --network anvil",
     "create-task:magiclvl": "hardhat run ./scripts/create-magiclvl-task.ts --network anvil",
     "create-task:spellswapper": "hardhat run ./scripts/create-spell-swapper-task.ts --network anvil",
     "create-task:negative-interests": "hardhat run ./scripts/create-negative-interests-task.ts --network anvil",
+    "create-task:stargate": "hardhat run ./scripts/create-stargate-task.ts --network anvil",
     "test:spell-staking": "yarn test:spell-staking-mainnet && yarn test:spell-staking-avalanche && yarn test:spell-staking-arbitrum && yarn test:spell-staking-fantom",
     "test:spell-staking-mainnet": "hardhat w3f-run spell-staking --logs --network ethereum",
     "test:spell-staking-avalanche": "hardhat w3f-run spell-staking --logs --network avalanche",
@@ -22,7 +23,8 @@
     "test:spell-staking-fantom": "hardhat w3f-run spell-staking --logs --network fantom",
     "test:magiclvl": "hardhat w3f-run magiclvl --logs --network bsc",
     "test:spell-swapper": "hardhat w3f-run spell-swapper --logs --network ethereum",
-    "test:negative-interests": "hardhat w3f-run negative-interests --logs --network ethereum"
+    "test:negative-interests": "hardhat w3f-run negative-interests --logs --network ethereum",
+    "test:stargate": "hardhat w3f-run stargate --logs --network ethereum"
   },
   "license": "ISC",
   "devDependencies": {

@@ -164,7 +164,7 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
       rewardTokenAmount.toString()
     ]);
 
-    console.log(SimulationUrlBuilder.build(GELATO_PROXY, execAddress, 0, callData, gelatoArgs.chainId));
+    SimulationUrlBuilder.log([GELATO_PROXY], [execAddress], [0], [callData], [gelatoArgs.chainId]);
 
     return {
       canExec: true,

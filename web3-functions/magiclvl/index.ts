@@ -209,7 +209,7 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
       ])
     });
 
-    console.log(SimulationUrlBuilder.build(GELATO_PROXY, execAddress, 0, callData, gelatoArgs.chainId));
+    SimulationUrlBuilder.log([GELATO_PROXY], [execAddress], [0], [callData[0].data], [gelatoArgs.chainId]);
 
     await storage.set("lastTimestamp", timestamp.toString());
 

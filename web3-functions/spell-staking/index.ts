@@ -3,6 +3,7 @@ import {
   Web3FunctionContext,
 } from "@gelatonetwork/web3-functions-sdk";
 import { BigNumber, Contract, utils } from "ethers";
+import { SimulationUrlBuilder } from "../../utils/tenderly";
 
 // import the above using require so that it's javascript objects
 const WITHDRAWER_ABI = require("./abi/CauldronFeeWithdrawer.json");
@@ -122,11 +123,14 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
     IERC20_ABI,
     multiChainProvider.chainId(gelatoArgs.chainId)
   );
-
+  console.log(info[
+    gelatoArgs.chainId
+  ].withdrawer.address);
   // Determine the total mim amount that will be withdrawn
   const amountToWithdraw = await info[
     gelatoArgs.chainId
   ].withdrawer.callStatic.withdraw();
+
 
   console.log("Amount to withdraw", (amountToWithdraw.toString() / 1e18).toLocaleString(), "MIM");
 
@@ -316,6 +320,8 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
 
   // Update last runs and execute
   await storage.set("lastRun", timestamp.toString());
+
+  SimulationUrlBuilder.log([WITHDRAWER_ADDRESS], [callData[0].to], [0], [callData[0].data], [gelatoArgs.chainId]);
 
   return {
     canExec: true,

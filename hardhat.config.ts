@@ -52,7 +52,7 @@ const config: HardhatUserConfig = {
     },
     fantom: {
       chainId: 250,
-      url: `https://rpcapi.fantom.network/`,
+      url: `https://rpc2.fantom.network`,
       accounts: PRIVATE_KEY ? [PRIVATE_KEY] : [],
     },
     optimism: {
