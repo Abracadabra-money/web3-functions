@@ -20,21 +20,28 @@ const main = async () => {
     {
       name: "NegativeInterests: WBTC",
       strategy: "0x186d76147A226A51a112Bb1958e8b755ab9FD1aF",
+      zeroExApiBaseUrl: "https://api.0x.org",
     },
     {
       name: "NegativeInterests: WETH",
       strategy: "0xcc0d7aF1f809dD3A589756Bba36Be04D19e9C6c5",
+      zeroExApiBaseUrl: "https://api.0x.org",
+    },
+    {
+      name: "NegativeInterests: CRV",
+      strategy: "0xa5ABd043aaafF2cDb0de3De45a010F0355a1c6E7",
+      zeroExApiBaseUrl: "",
     },
   ];
 
-  for (const { name, strategy } of config) {
+  for (const { name, strategy, zeroExApiBaseUrl } of config) {
     console.log(`Creating ${name} Task`);
     const task = await automate.createBatchExecTask({
       name,
       web3FunctionHash: cid,
       web3FunctionArgs: {
         execAddress: "0x762d06bB0E45f5ACaEEA716336142a39376E596E",
-        zeroExApiBaseUrl: "https://api.0x.org",
+        zeroExApiBaseUrl,
         strategy,
         intervalInSeconds: 86400,
         rewardSwappingSlippageInBips: 200,
