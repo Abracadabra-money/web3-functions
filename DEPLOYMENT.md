@@ -15,4 +15,5 @@
 | MagicLevel Junior     | [task](https://beta.app.gelato.network/task/0x464be4d56d973a9b8597543d750d45da5cd37970456351c76f45cdfe3fe49de4?chainId=56) |
 | Distributor Mainnet   | [task](https://beta.app.gelato.network/task/0x89b961b023a535a62e1020775d1c290dfd400cd7084f964b89773dee18396acb?chainId=1) |
 | Withdrawer Arbitrum   | [task](https://beta.app.gelato.network/task/0x4db2dd79637c5942307ebce48b85fa921c9229d3627d8790c1ed4d0052cfb4d2?chainId=42161) |
-| Stargate S*USDT       | [task](https://beta.app.gelato.network/task/0x2f380b32239dde0645a150d62508a5cc7fa2c63afc545992040d3d679a404934?chainId=1) |
+| Stargate S*USDT       | [task](https://beta.app.gelato.network/task/0x4fad8f10aa51dd684632c670435b19be5ca018387f011fe16b8a43d7ea365b32?chainId=1) |
+| Stargate S*USDC       | [task](https://beta.app.gelato.network/task/0x87476e7d44999d633d755200604c8136d57b2e74569610e8592470e64224ccc4?chainId=1) |

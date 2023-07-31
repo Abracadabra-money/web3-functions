@@ -28,7 +28,7 @@ const main = async () => {
         stgAddress: "0xAf5191B0De278C7286d6C7CC6ab6BB8A73bA2Cd6",
         gelatoProxyAddress: "0x4D0c7842cD6a04f8EDB39883Db7817160DA159C3",
         intervalInSeconds: 86400,
-        swapToLpSlippageBips: 500
+        swapToLpSlippageBips: 50
       },
     });
     console.log(`to: ${task.tx.to}`);
@@ -50,7 +50,7 @@ const main = async () => {
         stgAddress: "0xAf5191B0De278C7286d6C7CC6ab6BB8A73bA2Cd6",
         gelatoProxyAddress: "0x4D0c7842cD6a04f8EDB39883Db7817160DA159C3",
         intervalInSeconds: 86400,
-        swapToLpSlippageBips: 500
+        swapToLpSlippageBips: 50
       },
     });
     console.log(`to: ${task.tx.to}`);
