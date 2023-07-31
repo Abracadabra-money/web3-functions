@@ -69,6 +69,11 @@ const config: HardhatUserConfig = {
       chainId: 56,
       url: "https://bsc.publicnode.com",
       accounts: PRIVATE_KEY ? [PRIVATE_KEY] : [],
+    },
+    kava: {
+      chainId: 2222,
+      url: "https://kava.api.onfinality.io/public",
+      accounts: PRIVATE_KEY ? [PRIVATE_KEY] : [],
     }
   },
 };
