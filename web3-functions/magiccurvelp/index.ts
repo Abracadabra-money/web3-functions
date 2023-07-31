@@ -31,11 +31,8 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
     "function poolNumCoins() external view returns(uint8)",
     "function poolTokenInIndex() external view returns(uint8)",
     "function rewardToken() external view returns(address)",
-    "function run(address, uint256, address, uint256, bytes memory) external"
-  ];
-
-  const rewardGaugeAbi = [
-    "function claimable_reward(address, address) external view returns (uint256)"
+    "function run(uint256, address, uint256, bytes memory) external",
+    "function totalRewardsBalanceAfterClaiming() external view returns (uint256)"
   ];
 
   const erc20Abi = [
@@ -96,17 +93,11 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
   const rewardToken = new Contract(rewardTokenAddress, erc20Abi, provider);
   const swapRewardToToken = new Contract(swapRewardToTokenAddress, erc20Abi, provider);
 
-  const rewardGaugeAddress = await vault.staking();
-  const rewardGauge = new Contract(rewardGaugeAddress, rewardGaugeAbi, provider);
-  const claimableRewards = await rewardGauge.claimable_reward(vaultAddress, rewardTokenAddress);
   const curvePoolAddress = await vault.asset();
+  const totalRewardsBalanceAfterClaiming = await harvestor.totalRewardsBalanceAfterClaiming();
+  console.log("totalRewardTokenBalance", totalRewardsBalanceAfterClaiming.toString());
 
-  console.log("claimableRewards", claimableRewards.toString());
-
-  const totalRewardTokenBalance = (await rewardToken.balanceOf(execAddress)).add(claimableRewards);
-  console.log("totalRewardTokenBalance", totalRewardTokenBalance.toString());
-
-  const swapInfo = await getSwapInfo(totalRewardTokenBalance.toString());
+  const swapInfo = await getSwapInfo(totalRewardsBalanceAfterClaiming.toString());
   console.log("swapInfo", swapInfo);
 
   const minSwapRewardToTokenAmount = BigNumber.from(swapInfo.minOutAmount);
@@ -137,7 +128,7 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
   if (minLpAmount.gt(utils.parseEther("100"))) {
     callData.push({
       to: execAddress,
-      data: iface.encodeFunctionData("run", [vaultAddress, minLpAmount.toString(), swapRewardToTokenAddress, constants.MaxUint256, swapInfo.data])
+      data: iface.encodeFunctionData("run", [minLpAmount.toString(), swapRewardToTokenAddress, constants.MaxUint256, swapInfo.data])
     });
   } else {
     return { canExec: false, message: "reward balance too low, not minting lp yet" };
