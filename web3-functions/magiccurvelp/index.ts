@@ -16,15 +16,17 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
   const execAddress = userArgs.execAddress as string;
   const vaultAddress = userArgs.vaultAddress as string;
   const curveLensAddress = userArgs.curveLensAddress as string;
+  const minRequiredLpAmount = userArgs.minRequiredLpAmount as number;
   const swapRewardToTokenAddress = userArgs.swapRewardToTokenAddress as string;
   const swapRewardsSlippageBips = userArgs.swapRewardsSlippageBips as number;
 
   const vaultAbi = [
     "function staking() external view returns(address)",
+    "function asset() external view returns(address)",
   ];
 
   const curveLensAbi = [
-    "function calc_token_amount(address, address, uint256[4], uint256, bool) view returns (uint256)"
+    "function calc_token_amount(address,address,uint256[5],uint256,bool,bool) view returns (uint256)"
   ]
 
   const harvestorAbi = [
@@ -69,13 +71,14 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
       case 2222:
         let url = 'https://ethapi.openocean.finance/v2/2222/gas-price';
         let response: any = await api
-          .get(url, { timeout: 5_000, retry: 0 })
+          .get(url, { timeout: 10_000, retry: 0 })
           .json();
 
         const gasPrice = response["standard"];
-        url = `https://ethapi.openocean.finance/v2/2222/swap?inTokenAddress=${rewardToken}&outTokenAddress=${swapRewardToTokenAddress}&amount=${amount}&gasPrice=${gasPrice}&disabledDexIds=&slippage=${swapRewardsSlippageBips}&account=${execAddress}`;
+        url = `https://ethapi.openocean.finance/v2/2222/swap?inTokenAddress=${rewardTokenAddress}&outTokenAddress=${swapRewardToTokenAddress}&amount=${amount}&gasPrice=${gasPrice}&disabledDexIds=&slippage=${swapRewardsSlippageBips}&account=${execAddress}`;
+        console.log(url);
         response = await api
-          .get(url, { timeout: 5_000, retry: 0 })
+          .get(url, { timeout: 10_000, retry: 0 })
           .json();
         return {
           data: response["data"],
@@ -86,11 +89,11 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
     }
   };
 
+  const MAX_COIN_LENS = 5; // max number of coins in curve pool lens. need to provide 0 for other amounts.
   const vault = new Contract(vaultAddress, vaultAbi, provider);
   const curveLens = new Contract(curveLensAddress, curveLensAbi, provider);
   const harvestor = new Contract(execAddress, harvestorAbi, provider);
   const rewardTokenAddress = await harvestor.rewardToken();
-  const rewardToken = new Contract(rewardTokenAddress, erc20Abi, provider);
   const swapRewardToToken = new Contract(swapRewardToTokenAddress, erc20Abi, provider);
 
   const curvePoolAddress = await vault.asset();
@@ -98,7 +101,7 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
   console.log("totalRewardTokenBalance", totalRewardsBalanceAfterClaiming.toString());
 
   const swapInfo = await getSwapInfo(totalRewardsBalanceAfterClaiming.toString());
-  console.log("swapInfo", swapInfo);
+  console.log("swapInfo", JSON.stringify(swapInfo));
 
   const minSwapRewardToTokenAmount = BigNumber.from(swapInfo.minOutAmount);
   console.log("minSwapRewardToTokenAmount", minSwapRewardToTokenAmount.toString());
@@ -109,26 +112,26 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
   const poolNumCoins = await harvestor.poolNumCoins();
   const poolTokenInIndex = await harvestor.poolTokenInIndex();
 
-  const tokenIns = [];
-  for (let i = 0; i < poolNumCoins; i++) {
+  const amountsIn = [];
+  for (let i = 0; i < MAX_COIN_LENS; i++) {
     if (i === poolTokenInIndex) {
-      tokenIns.push(rewardTokenAddress);
+      amountsIn.push(totalSwapToTokenBalance);
       continue;
     }
-    tokenIns.push(0);
+    amountsIn.push(0);
   }
 
-  const minLpAmount = await curveLens.calc_token_amount(curvePoolAddress, curvePoolAddress, tokenIns, poolNumCoins, true);
+  const minLpAmount = await curveLens.calc_token_amount(curvePoolAddress, curvePoolAddress, amountsIn, poolNumCoins, true, false);
   console.log("minLpAmount", minLpAmount.toString());
 
   const iface = new Interface(harvestorAbi);
   const callData = [];
 
   // dont mint if the amount of lp to mint is too low
-  if (minLpAmount.gt(utils.parseEther("100"))) {
+  if (minLpAmount.gt(BigNumber.from(minRequiredLpAmount))) {
     callData.push({
       to: execAddress,
-      data: iface.encodeFunctionData("run", [minLpAmount.toString(), swapRewardToTokenAddress, constants.MaxUint256, swapInfo.data])
+      data: iface.encodeFunctionData("run", [minLpAmount.toString(), swapRewardToTokenAddress, constants.MaxUint256.toString(), swapInfo.data.toString()])
     });
   } else {
     return { canExec: false, message: "reward balance too low, not minting lp yet" };

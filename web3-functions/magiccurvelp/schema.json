@@ -8,6 +8,7 @@
     "vaultAddress": "string",
     "swapRewardToTokenAddress": "string",
     "curveLensAddress": "string",
+    "minRequiredLpAmount": "string",
     "intervalInSeconds": "number",
     "swapRewardsSlippageBips": "number"
   }

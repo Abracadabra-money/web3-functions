@@ -22,7 +22,10 @@ const config: HardhatUserConfig = {
       "fantom",
       "optimism",
       "polygon",
-      "bsc"
+      "bsc",
+      "kava",
+      "base",
+      "linea"
     ], //(multiChainProvider) injects provider for these networks
   },
   defaultNetwork: "ethereum",
@@ -72,9 +75,19 @@ const config: HardhatUserConfig = {
     },
     kava: {
       chainId: 2222,
-      url: "https://kava.api.onfinality.io/public",
+      url: "https://kava-rpc.gateway.pokt.network",
       accounts: PRIVATE_KEY ? [PRIVATE_KEY] : [],
-    }
+    },
+    base: {
+      chainId: 8453,
+      url: "https://base.meowrpc.com",
+      accounts: PRIVATE_KEY ? [PRIVATE_KEY] : [],
+    },
+    linea: {
+      chainId: 59144,
+      url: "https://rpc.linea.build",
+      accounts: PRIVATE_KEY ? [PRIVATE_KEY] : [],
+    },
   },
 };
 

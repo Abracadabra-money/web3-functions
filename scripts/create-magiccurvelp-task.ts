@@ -26,6 +26,7 @@ const main = async () => {
         vaultAddress: "",
         swapRewardToTokenAddress: "0x919c1c267bc06a7039e03fcc2ef738525769109c", // USDT
         curveLensAddress: "0x5552b631e2ad801faa129aacf4b701071cc9d1f7",
+        minRequiredLpAmount: "100000000000000000000", // 100 lp min
         intervalInSeconds: 86400,
         swapRewardsSlippageBips: 100, // wKAVA -> USDT 1% slippage
       },
