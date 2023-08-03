@@ -4,12 +4,38 @@ import {
   Web3Function,
   Web3FunctionContext,
 } from "@gelatonetwork/web3-functions-sdk";
+import { SimulationUrlBuilder } from "../../utils/tenderly";
 
 import ky from "ky";
 
-const LENS_ABI = [
+const lensAbi = [
   "function previewAccrue(address) external view returns(uint128)"
 ]
+
+const strategyAbi = [
+  "function swapAndwithdrawFees(uint256,address,bytes) external returns (uint256 amountOut)",
+  "function setInterest(uint256) external",
+  "function withdrawFees() external returns (uint256)",
+  "function strategyToken() external view returns(address)",
+  "function pendingFeeEarned() external view returns(uint128)",
+  "function bentoBox() external view returns(address)",
+];
+
+const boxAbi = [
+  "function balanceOf(address token,address account) external view returns(uint256)",
+  "function toAmount(address token,uint256 share,bool roundUp) external view returns(uint256)",
+];
+
+const oracleAbi = [
+  "function latestAnswer() external view returns (int256)"
+];
+
+const cauldronAbi = [
+  "function totalBorrow() external view returns(uint128 elastic,uint128 base)",
+];
+
+const BIPS = 10_000;
+const GELATO_PROXY = "0x4D0c7842cD6a04f8EDB39883Db7817160DA159C3";
 
 Web3Function.onRun(async (context: Web3FunctionContext) => {
   const { userArgs, storage, multiChainProvider } = context;
@@ -22,26 +48,17 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
   // WBTC strat: 0x186d76147A226A51a112Bb1958e8b755ab9FD1aF
   // WETH strat: 0xcc0d7aF1f809dD3A589756Bba36Be04D19e9C6c5
   // CRV strat: 0xa5ABd043aaafF2cDb0de3De45a010F0355a1c6E7
-  const strategy = userArgs.strategy as string;
   const execAddress = userArgs.execAddress as string;
+  const strategyAddress = userArgs.strategyAddress as string;
   const rewardSwappingSlippageInBips = userArgs.rewardSwappingSlippageInBips as number;
   const maxBentoBoxAmountIncreaseInBips = userArgs.maxBentoBoxAmountIncreaseInBips as number;
   const maxBentoBoxChangeAmountInBips = userArgs.maxBentoBoxChangeAmountInBips as number;
   const interestAdjusterType = userArgs.interestAdjusterType as string;
-  const lens = "0xfd2387105ee3ccb0d96b7de2d86d26344f17787b";
+  const interestAdjusterParameters = userArgs.interestAdjusterParameters as string;
+  const swapToAddress = userArgs.swapToAddress as string;
 
-  const BIPS = 10_000;
-
-  // contracts
-  const strategyAbi = [
-    "function strategyToken() external view returns(address)",
-    "function pendingFeeEarned() external view returns(uint128)"
-  ];
-
-  const mim = "0x99D8a9C45b2ecA8864373A26D1459e3Dff1e17F3";
-  const strategyContract = new Contract(strategy, strategyAbi, provider);
-  const lensContract = new Contract(lens, LENS_ABI, provider);
-
+  const strategy = new Contract(strategyAddress, strategyAbi, provider);
+  const box = new Contract(await strategy.bentoBox(), boxAbi, provider);
   const lastTimestampStr = (await storage.get("lastTimestamp")) ?? "0";
   const lastTimestamp = parseInt(lastTimestampStr);
 
@@ -55,29 +72,34 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
     return { canExec: false, message: "Time not elapsed" };
   }
 
-  const strategyToken = await strategyContract.strategyToken();
+  const strategyToken = await strategy.strategyToken();
   if (!strategyToken) throw Error("strategyToken call failed");
 
-  let response = await lensContract.previewAccrue(strategyContract.address);
+  let runCalldata: any = [];
 
-  if (!response) throw Error(`failed to call previewAccrue`);
-  let totalPendingFees = BigNumber.from(response);
+  switch (interestAdjusterType) {
+    case "CRV_AIP_13_6":
+      runCalldata = [
+        ...runCalldata,
+        await handle_AIP_13_6(interestAdjusterParameters.split(","), box, provider)
+      ];
 
-  logInfo(`Pending accrued interest: ${totalPendingFees.toString()}`);
+      break;
+  }
 
-  response = await strategyContract.pendingFeeEarned();
-
-  totalPendingFees = totalPendingFees.add(BigNumber.from(response));
-
-  const strategyIface = new Interface([
-    "function swapAndwithdrawFees(uint256,address,bytes) external returns (uint256 amountOut)",
-    "function setInterest(uint256) external",
-    "function withdrawFees() external returns (uint256)"
-  ]);
-
-  const runCalldata = [];
+  const strategyIface = new Interface(strategyAbi);
 
   if (swapRewards) {
+    const lens = "0xfd2387105ee3ccb0d96b7de2d86d26344f17787b";
+    const lensContract = new Contract(lens, lensAbi, provider);
+    let response = await lensContract.previewAccrue(strategy.address);
+    if (!response) throw Error(`failed to call previewAccrue`);
+    let totalPendingFees = BigNumber.from(response);
+    console.log(`Pending accrued interest: ${totalPendingFees.toString()}`);
+    response = await strategy.pendingFeeEarned();
+    totalPendingFees = totalPendingFees.add(BigNumber.from(response));
+
+
     if (totalPendingFees.gt(BigNumber.from(0))) {
       const apiKey = await context.secrets.get("ZEROX_API_KEY");
       if (!apiKey) {
@@ -94,7 +116,7 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
         }
       });
 
-      const quoteApi = `${zeroExApiBaseUrl}/swap/v1/quote?buyToken=${mim}&sellToken=${String(strategyToken)}&sellAmount=${totalPendingFees.toString()}`;
+      const quoteApi = `${zeroExApiBaseUrl}/swap/v1/quote?buyToken=${swapToAddress}&sellToken=${String(strategyToken)}&sellAmount=${totalPendingFees.toString()}`;
       const quoteApiRes: any = await api.get(quoteApi).json();
 
       if (!quoteApiRes) throw Error("Get quote api failed");
@@ -116,7 +138,7 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
 
       runCalldata.push(strategyIface.encodeFunctionData("swapAndwithdrawFees", [
         minAmountOut.toString(),
-        mim,
+        swapToAddress,
         data,
       ]));
     }
@@ -126,12 +148,6 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
     runCalldata.push(strategyIface.encodeFunctionData("withdrawFees", []));
   }
 
-  switch (interestAdjusterType) {
-    // https://forum.abracadabra.money/t/aip-13-6-further-amendment-on-interest-rate/4325
-    case "CRV_AIP_13_6":
-      break;
-  }
-
   const iface = new Interface([
     "function run(address,uint256,uint256,bytes[]) external",
   ]);
@@ -139,23 +155,91 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
   const callData = {
     to: execAddress,
     data: iface.encodeFunctionData("run", [
-      strategy,
+      strategyAddress,
       maxBentoBoxAmountIncreaseInBips.toString(),
       maxBentoBoxChangeAmountInBips.toString(),
       runCalldata.length > 0 ? runCalldata : "[]",
     ])
   };
 
-  console.log(
-    `https://dashboard.tenderly.co/abracadabra/magic-internet-money/simulator/new?contractFunction=0xe766b1f5&value=0&contractAddress=${callData.to}&rawFunctionInput=${callData.data}&network=1&from=0x4d0c7842cd6a04f8edb39883db7817160da159c3&block=&blockIndex=0&headerBlockNumber=&headerTimestamp=`
-  );
-  //console.log(callData);
+  SimulationUrlBuilder.log([GELATO_PROXY], [execAddress], [0], [callData.data], [1]);
 
   await storage.set("lastTimestamp", timestamp.toString());
 
   return { canExec: true, callData: [callData] };
 });
 
-function logInfo(msg: string): void {
-  console.info(msg);
+// https://forum.abracadabra.money/t/aip-13-6-further-amendment-on-interest-rate/4325
+async function handle_AIP_13_6(cauldrons: string[], box: Contract, provider: any): Promise<string[]> {
+  console.log("Using AIP_13_6 interest adjusting...");
+  const crvOracle = new Contract("0xcd627aa160a6fa45eb793d19ef54f5062f20f33f", oracleAbi, provider);
+  const crv = "0xD533a949740bb3306d119CC777fa900bA034cd52";
+  const crvPrice = await crvOracle.latestAnswer();
+  console.log(`crv price: $${crvPrice.toString() / 1e8}`);
+
+  const crvCauldron1 = new Contract(cauldrons[0], cauldronAbi, provider);
+  const crvCauldron2 = new Contract(cauldrons[1], cauldronAbi, provider);
+
+  // Principal Amount
+  // Take the amount from DegenBox directly since the strategy is taking the interests from it
+  const crvCauldron1PrincipalBalance = await box.toAmount(crv, await box.balanceOf(crv, cauldrons[0]), true);
+  const crvCauldron2PrincipalBalance = await box.toAmount(crv, await box.balanceOf(crv, cauldrons[1]), true);
+  console.log(`crvCauldron1PrincipalBalance: ${crvCauldron1PrincipalBalance.toString()}`);
+  console.log(`crvCauldron2PrincipalBalance: ${crvCauldron2PrincipalBalance.toString()}`);
+
+  const crvCauldron1PrincipalBalanceInUsd = crvCauldron1PrincipalBalance.mul(crvPrice).div(BigNumber.from(10).pow(8));
+  const crvCauldron2PrincipalBalanceInUsd = crvCauldron2PrincipalBalance.mul(crvPrice).div(BigNumber.from(10).pow(8));
+  console.log(`crvCauldron1PrincipalBalanceInUsd: $${(crvCauldron1PrincipalBalanceInUsd.toString() / 1e18).toLocaleString("us")}`);
+  console.log(`crvCauldron2PrincipalBalanceInUsd: $${(crvCauldron2PrincipalBalanceInUsd.toString() / 1e18).toLocaleString("us")}`);
+
+  const totalPrincipalBalanceInUsd = crvCauldron1PrincipalBalanceInUsd.add(crvCauldron2PrincipalBalanceInUsd);
+  console.log(`totalPrincipalBalanceInUsd: $${(totalPrincipalBalanceInUsd.toString() / 1e18).toLocaleString("us")}`);
+
+  let baseInterestRate;
+
+  // >= 10M: 150% (15_000 bips)
+  if (totalPrincipalBalanceInUsd.gt(BigNumber.from(10_000_000).mul(BigNumber.from(10).pow(18)))) {
+    baseInterestRate = BigNumber.from(15_000);
+  }
+  // >= 5M: 80% (8_000 bips)
+  else if (totalPrincipalBalanceInUsd.gt(BigNumber.from(5_000_000).mul(BigNumber.from(10).pow(18)))) {
+    baseInterestRate = BigNumber.from(8_000);
+  }
+  // otherwise: 30% (3_000 bips)
+  else {
+    baseInterestRate = BigNumber.from(3_000);
+  }
+
+  console.log(`baseInterestRate: ${baseInterestRate.toString()}`);
+
+  // Collateral Ratio
+  const crvCauldron1TotalBorrow = await crvCauldron1.totalBorrow();
+  const crvCauldron2TotalBorrow = await crvCauldron2.totalBorrow();
+  const totalBorrowElastic = crvCauldron1TotalBorrow[0].add(crvCauldron2TotalBorrow[0]);
+  console.log(`crvCauldron1TotalBorrow: ${crvCauldron1TotalBorrow.toString()}`);
+  console.log(`crvCauldron2TotalBorrow: ${crvCauldron2TotalBorrow.toString()}`);
+  console.log(`totalBorrowElastic (MIM): ${(totalBorrowElastic.toString() / 1e18).toLocaleString("us")}`);
+
+  const collateralRatio = totalBorrowElastic.mul(100).mul(BigNumber.from(10).pow(18)).div(totalPrincipalBalanceInUsd);
+  console.log(`collateralRatio: ${collateralRatio.toString()}`);
+
+  // <= 40%
+  if (collateralRatio.lt(BigNumber.from(40).mul(BigNumber.from(10).pow(18)))) {
+    baseInterestRate.sub(BigNumber.from(2_000)); // -20% in bips
+  }
+  // <= 50%
+  else if (collateralRatio.lt(BigNumber.from(50).mul(BigNumber.from(10).pow(18)))) {
+    // no change
+  }
+  // <= 60%
+  else if (collateralRatio.lt(BigNumber.from(60).mul(BigNumber.from(10).pow(18)))) {
+    baseInterestRate.add(BigNumber.from(1_500)); // +15% in bips
+  }
+  else {
+    baseInterestRate.add(BigNumber.from(2_500)); // +25% in bips
+  }
+
+  const runCalldata: string[] = [];
+
+  return runCalldata;
 }

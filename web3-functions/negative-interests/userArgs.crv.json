@@ -1,10 +1,12 @@
 {
     "execAddress": "0x762d06bB0E45f5ACaEEA716336142a39376E596E",
-    "zeroExApiBaseUrl": "https://api.0x.org",
-    "strategy": "0x186d76147A226A51a112Bb1958e8b755ab9FD1aF",
-    "intervalInSeconds": 86400,
-    "rewardSwappingSlippageInBips": 200,
+    "zeroExApiBaseUrl": "",
+    "strategyAddress": "0xa5ABd043aaafF2cDb0de3De45a010F0355a1c6E7",
+    "swapToAddress": "",
+    "intervalInSeconds": 43400,
+    "rewardSwappingSlippageInBips": 0,
     "maxBentoBoxAmountIncreaseInBips": 1,
     "maxBentoBoxChangeAmountInBips": 1000,
-    "interestAdjusterType": "CRV_AIP_13_6"
+    "interestAdjusterType": "CRV_AIP_13_6",
+    "interestAdjusterParameters": "0x207763511da879a900973A5E092382117C3c1588,0x7d8dF3E4D06B0e19960c19Ee673c0823BEB90815"
 }

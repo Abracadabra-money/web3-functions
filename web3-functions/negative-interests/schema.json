@@ -8,9 +8,11 @@
     "zeroExApiBaseUrl": "string",
     "intervalInSeconds": "number",
     "rewardSwappingSlippageInBips": "number",
-    "strategy": "string",
+    "strategyAddress": "string",
+    "swapToAddress": "string",
     "maxBentoBoxAmountIncreaseInBips": "number",
     "maxBentoBoxChangeAmountInBips": "number",
-    "interestAdjusterType": "string"
+    "interestAdjusterType": "string",
+    "interestAdjusterParameters": "string"
   }
 }
