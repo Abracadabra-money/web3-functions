@@ -10,6 +10,7 @@
     "rewardSwappingSlippageInBips": "number",
     "strategy": "string",
     "maxBentoBoxAmountIncreaseInBips": "number",
-    "maxBentoBoxChangeAmountInBips": "number"
+    "maxBentoBoxChangeAmountInBips": "number",
+    "interestAdjusterType": "string"
   }
 }

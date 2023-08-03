@@ -21,11 +21,13 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
 
   // WBTC strat: 0x186d76147A226A51a112Bb1958e8b755ab9FD1aF
   // WETH strat: 0xcc0d7aF1f809dD3A589756Bba36Be04D19e9C6c5
+  // CRV strat: 0xa5ABd043aaafF2cDb0de3De45a010F0355a1c6E7
   const strategy = userArgs.strategy as string;
   const execAddress = userArgs.execAddress as string;
   const rewardSwappingSlippageInBips = userArgs.rewardSwappingSlippageInBips as number;
   const maxBentoBoxAmountIncreaseInBips = userArgs.maxBentoBoxAmountIncreaseInBips as number;
   const maxBentoBoxChangeAmountInBips = userArgs.maxBentoBoxChangeAmountInBips as number;
+  const interestAdjusterType = userArgs.interestAdjusterType as string;
   const lens = "0xfd2387105ee3ccb0d96b7de2d86d26344f17787b";
 
   const BIPS = 10_000;
@@ -73,12 +75,10 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
     "function withdrawFees() external returns (uint256)"
   ]);
 
-  const runCalldata = new Array<string>(1);
+  const runCalldata = [];
 
   if (swapRewards) {
     if (totalPendingFees.gt(BigNumber.from(0))) {
-      runCalldata[0] = "0x0000000000000000000000000000000000000000"
-
       const apiKey = await context.secrets.get("ZEROX_API_KEY");
       if (!apiKey) {
         return { canExec: false, message: "ZEROX_API_KEY not set in secrets" };
@@ -114,16 +114,22 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
 
       console.log(minAmountOut)
 
-      runCalldata[0] = strategyIface.encodeFunctionData("swapAndwithdrawFees", [
+      runCalldata.push(strategyIface.encodeFunctionData("swapAndwithdrawFees", [
         minAmountOut.toString(),
         mim,
         data,
-      ]);
+      ]));
     }
   }
   // simply withdraw fees
   else {
-    runCalldata[0] = strategyIface.encodeFunctionData("withdrawFees", []);
+    runCalldata.push(strategyIface.encodeFunctionData("withdrawFees", []));
+  }
+
+  switch (interestAdjusterType) {
+    // https://forum.abracadabra.money/t/aip-13-6-further-amendment-on-interest-rate/4325
+    case "CRV_AIP_13_6":
+      break;
   }
 
   const iface = new Interface([
