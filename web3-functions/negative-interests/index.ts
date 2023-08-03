@@ -45,7 +45,7 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
 
   // Check if it's ready for a new update
   const timestamp = (
-    await multiChainProvider.chainId(1).getBlock("latest")
+    await provider.getBlock("latest")
   ).timestamp;
 
   console.log(`Next update: ${lastTimestamp + intervalInSeconds}`);
