@@ -5,7 +5,6 @@ import {
   Web3FunctionContext,
 } from "@gelatonetwork/web3-functions-sdk";
 import { SimulationUrlBuilder } from "../../utils/tenderly";
-
 import ky from "ky";
 
 const lensAbi = [
@@ -19,6 +18,7 @@ const strategyAbi = [
   "function strategyToken() external view returns(address)",
   "function pendingFeeEarned() external view returns(uint128)",
   "function bentoBox() external view returns(address)",
+  "function getYearlyInterestBips() external view returns (uint256)",
 ];
 
 const boxAbi = [
@@ -81,7 +81,7 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
     case "CRV_AIP_13_6":
       runCalldata = [
         ...runCalldata,
-        await handle_AIP_13_6(interestAdjusterParameters.split(","), box, provider)
+        ...await handle_AIP_13_6(interestAdjusterParameters.split(","), box, strategy, provider)
       ];
 
       break;
@@ -152,6 +152,7 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
     "function run(address,uint256,uint256,bytes[]) external",
   ]);
 
+  console.log(runCalldata);
   const callData = {
     to: execAddress,
     data: iface.encodeFunctionData("run", [
@@ -170,7 +171,7 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
 });
 
 // https://forum.abracadabra.money/t/aip-13-6-further-amendment-on-interest-rate/4325
-async function handle_AIP_13_6(cauldrons: string[], box: Contract, provider: any): Promise<string[]> {
+async function handle_AIP_13_6(cauldrons: string[], box: Contract, strategy: Contract, provider: any): Promise<string[]> {
   console.log("Using AIP_13_6 interest adjusting...");
   const crvOracle = new Contract("0xcd627aa160a6fa45eb793d19ef54f5062f20f33f", oracleAbi, provider);
   const crv = "0xD533a949740bb3306d119CC777fa900bA034cd52";
@@ -195,22 +196,22 @@ async function handle_AIP_13_6(cauldrons: string[], box: Contract, provider: any
   const totalPrincipalBalanceInUsd = crvCauldron1PrincipalBalanceInUsd.add(crvCauldron2PrincipalBalanceInUsd);
   console.log(`totalPrincipalBalanceInUsd: $${(totalPrincipalBalanceInUsd.toString() / 1e18).toLocaleString("us")}`);
 
-  let baseInterestRate;
+  let interestRate;
 
   // >= 10M: 150% (15_000 bips)
   if (totalPrincipalBalanceInUsd.gt(BigNumber.from(10_000_000).mul(BigNumber.from(10).pow(18)))) {
-    baseInterestRate = BigNumber.from(15_000);
+    interestRate = BigNumber.from(15_000);
   }
   // >= 5M: 80% (8_000 bips)
   else if (totalPrincipalBalanceInUsd.gt(BigNumber.from(5_000_000).mul(BigNumber.from(10).pow(18)))) {
-    baseInterestRate = BigNumber.from(8_000);
+    interestRate = BigNumber.from(8_000);
   }
   // otherwise: 30% (3_000 bips)
   else {
-    baseInterestRate = BigNumber.from(3_000);
+    interestRate = BigNumber.from(3_000);
   }
 
-  console.log(`baseInterestRate: ${baseInterestRate.toString()}`);
+  console.log(`base interestRate: ${interestRate.toString()}`);
 
   // Collateral Ratio
   const crvCauldron1TotalBorrow = await crvCauldron1.totalBorrow();
@@ -221,11 +222,11 @@ async function handle_AIP_13_6(cauldrons: string[], box: Contract, provider: any
   console.log(`totalBorrowElastic (MIM): ${(totalBorrowElastic.toString() / 1e18).toLocaleString("us")}`);
 
   const collateralRatio = totalBorrowElastic.mul(100).mul(BigNumber.from(10).pow(18)).div(totalPrincipalBalanceInUsd);
-  console.log(`collateralRatio: ${collateralRatio.toString()}`);
+  console.log(`collateralRatio: ${collateralRatio.toString() / 1e18}`);
 
   // <= 40%
   if (collateralRatio.lt(BigNumber.from(40).mul(BigNumber.from(10).pow(18)))) {
-    baseInterestRate.sub(BigNumber.from(2_000)); // -20% in bips
+    interestRate = interestRate.sub(BigNumber.from(2_000)); // -20% in bips
   }
   // <= 50%
   else if (collateralRatio.lt(BigNumber.from(50).mul(BigNumber.from(10).pow(18)))) {
@@ -233,13 +234,46 @@ async function handle_AIP_13_6(cauldrons: string[], box: Contract, provider: any
   }
   // <= 60%
   else if (collateralRatio.lt(BigNumber.from(60).mul(BigNumber.from(10).pow(18)))) {
-    baseInterestRate.add(BigNumber.from(1_500)); // +15% in bips
+    interestRate = interestRate.add(BigNumber.from(1_500)); // +15% in bips
   }
   else {
-    baseInterestRate.add(BigNumber.from(2_500)); // +25% in bips
+    interestRate = interestRate.add(BigNumber.from(2_500)); // +25% in bips
   }
 
+  console.log(`interestRate after ratio: ${interestRate.toString()}`);
+
+
+  const quoteApi = "https://api.curve.fi/api/getPools/ethereum/factory-tricrypto";
+  const quoteApiRes: any = await ky.get(quoteApi).json();
+
+  if (!quoteApiRes.success) throw Error("fail to query curve api");
+  const pool = quoteApiRes.data.poolData.find((p: { id: string; }) => p.id == "factory-tricrypto-4");
+  if (!pool) throw Error("cannot find tricrv pool");
+
+  const liquidityUsd = pool.usdTotal;
+  console.log("Pool Liquidity in Usd", liquidityUsd);
+
+  if (liquidityUsd > 30_000_000) {
+    interestRate = interestRate.sub(BigNumber.from(2_000)); // -20% in bips
+  } else if (liquidityUsd > 20_000_000) {
+    interestRate = interestRate.sub(BigNumber.from(1_500)); // -15% in bips
+  } else if (liquidityUsd > 10_000_000) {
+    interestRate = interestRate.sub(BigNumber.from(1_000)); // -10% in bips
+  } else if (liquidityUsd > 5_000_000) {
+    interestRate = interestRate.sub(BigNumber.from(500)); // -5% in bips
+  }
+  console.log(`Final interestRate: ${interestRate.toString()}`);
+
+  const strategyIface = new Interface(strategyAbi);
+  const currentInterest = await strategy.getYearlyInterestBips();
+
   const runCalldata: string[] = [];
+
+  if (!currentInterest.eq(interestRate)) {
+    runCalldata.push(strategyIface.encodeFunctionData("setInterest", [interestRate.toString()]));
+  } else {
+    console.log("Interest rate changed");
+  }
 
   return runCalldata;
 }
