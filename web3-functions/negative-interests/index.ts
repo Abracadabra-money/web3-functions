@@ -6,6 +6,7 @@ import {
 } from "@gelatonetwork/web3-functions-sdk";
 import { SimulationUrlBuilder } from "../../utils/tenderly";
 import ky from "ky";
+import { int } from "hardhat/internal/core/params/argumentTypes";
 
 const lensAbi = [
   "function previewAccrue(address) external view returns(uint128)"
@@ -24,6 +25,7 @@ const strategyAbi = [
 const boxAbi = [
   "function balanceOf(address token,address account) external view returns(uint256)",
   "function toAmount(address token,uint256 share,bool roundUp) external view returns(uint256)",
+  "function strategyData(address) external view returns(uint64 strategyStartDate,uint64 targetPercentage,uint128 balance)",
 ];
 
 const oracleAbi = [
@@ -32,6 +34,10 @@ const oracleAbi = [
 
 const cauldronAbi = [
   "function totalBorrow() external view returns(uint128 elastic,uint128 base)",
+];
+
+const erc20Abi = [
+  "function balanceOf(address) external view returns (uint256)",
 ];
 
 const BIPS = 10_000;
@@ -152,7 +158,6 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
     "function run(address,uint256,uint256,bytes[]) external",
   ]);
 
-  console.log(runCalldata);
   const callData = {
     to: execAddress,
     data: iface.encodeFunctionData("run", [
@@ -174,36 +179,45 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
 async function handle_AIP_13_6(cauldrons: string[], box: Contract, strategy: Contract, provider: any): Promise<string[]> {
   console.log("Using AIP_13_6 interest adjusting...");
   const crvOracle = new Contract("0xcd627aa160a6fa45eb793d19ef54f5062f20f33f", oracleAbi, provider);
-  const crv = "0xD533a949740bb3306d119CC777fa900bA034cd52";
+  const crvAddress = "0xD533a949740bb3306d119CC777fa900bA034cd52";
+  const crv = new Contract(crvAddress, erc20Abi, provider);
+
   const crvPrice = await crvOracle.latestAnswer();
   console.log(`crv price: $${crvPrice.toString() / 1e8}`);
 
   const crvCauldron1 = new Contract(cauldrons[0], cauldronAbi, provider);
   const crvCauldron2 = new Contract(cauldrons[1], cauldronAbi, provider);
+  const crvCauldron1TotalBorrow = await crvCauldron1.totalBorrow();
+  const crvCauldron2TotalBorrow = await crvCauldron2.totalBorrow();
 
-  // Principal Amount
-  // Take the amount from DegenBox directly since the strategy is taking the interests from it
-  const crvCauldron1PrincipalBalance = await box.toAmount(crv, await box.balanceOf(crv, cauldrons[0]), true);
-  const crvCauldron2PrincipalBalance = await box.toAmount(crv, await box.balanceOf(crv, cauldrons[1]), true);
-  console.log(`crvCauldron1PrincipalBalance: ${crvCauldron1PrincipalBalance.toString()}`);
-  console.log(`crvCauldron2PrincipalBalance: ${crvCauldron2PrincipalBalance.toString()}`);
+  // borrowed + interests
+  const principal = crvCauldron1TotalBorrow[0].add(crvCauldron2TotalBorrow[0]);
+  console.log(`crvCauldron1TotalBorrow: ${crvCauldron1TotalBorrow.toString()}`);
+  console.log(`crvCauldron2TotalBorrow: ${crvCauldron2TotalBorrow.toString()}`);
+  console.log(`principal (MIM): ${(principal.toString() / 1e18).toLocaleString("us")}`);
 
-  const crvCauldron1PrincipalBalanceInUsd = crvCauldron1PrincipalBalance.mul(crvPrice).div(BigNumber.from(10).pow(8));
-  const crvCauldron2PrincipalBalanceInUsd = crvCauldron2PrincipalBalance.mul(crvPrice).div(BigNumber.from(10).pow(8));
-  console.log(`crvCauldron1PrincipalBalanceInUsd: $${(crvCauldron1PrincipalBalanceInUsd.toString() / 1e18).toLocaleString("us")}`);
-  console.log(`crvCauldron2PrincipalBalanceInUsd: $${(crvCauldron2PrincipalBalanceInUsd.toString() / 1e18).toLocaleString("us")}`);
+  const crvCauldron1CollateralAmount = await box.toAmount(crvAddress, await box.balanceOf(crvAddress, cauldrons[0]), true);
+  const crvCauldron2CollateralAmount = await box.toAmount(crvAddress, await box.balanceOf(crvAddress, cauldrons[1]), true);
+  console.log(`crvCauldron1CollateralAmount: ${crvCauldron1CollateralAmount.toString()}`);
+  console.log(`crvCauldron2CollateralAmount: ${crvCauldron2CollateralAmount.toString()}`);
 
-  const totalPrincipalBalanceInUsd = crvCauldron1PrincipalBalanceInUsd.add(crvCauldron2PrincipalBalanceInUsd);
-  console.log(`totalPrincipalBalanceInUsd: $${(totalPrincipalBalanceInUsd.toString() / 1e18).toLocaleString("us")}`);
+  const crvCauldron1CollateralValueInUsd = crvCauldron1CollateralAmount.mul(crvPrice).div(BigNumber.from(10).pow(8));
+  const crvCauldron2CollateralValueInUsd = crvCauldron2CollateralAmount.mul(crvPrice).div(BigNumber.from(10).pow(8));
+  console.log(`crvCauldron1CollateralValueInUsd: $${(crvCauldron1CollateralValueInUsd.toString() / 1e18).toLocaleString("us")}`);
+  console.log(`crvCauldron2CollateralValueInUsd: $${(crvCauldron2CollateralValueInUsd.toString() / 1e18).toLocaleString("us")}`);
+
+  // total collateral value USD
+  const collateralValueInUsd = crvCauldron1CollateralValueInUsd.add(crvCauldron2CollateralValueInUsd);
+  console.log(`totalCollateralValueInUsd: $${(collateralValueInUsd.toString() / 1e18).toLocaleString("us")}`);
 
   let interestRate;
 
   // >= 10M: 150% (15_000 bips)
-  if (totalPrincipalBalanceInUsd.gt(BigNumber.from(10_000_000).mul(BigNumber.from(10).pow(18)))) {
+  if (principal.gt(BigNumber.from(10_000_000).mul(BigNumber.from(10).pow(18)))) {
     interestRate = BigNumber.from(15_000);
   }
   // >= 5M: 80% (8_000 bips)
-  else if (totalPrincipalBalanceInUsd.gt(BigNumber.from(5_000_000).mul(BigNumber.from(10).pow(18)))) {
+  else if (principal.gt(BigNumber.from(5_000_000).mul(BigNumber.from(10).pow(18)))) {
     interestRate = BigNumber.from(8_000);
   }
   // otherwise: 30% (3_000 bips)
@@ -214,14 +228,7 @@ async function handle_AIP_13_6(cauldrons: string[], box: Contract, strategy: Con
   console.log(`base interestRate: ${interestRate.toString()}`);
 
   // Collateral Ratio
-  const crvCauldron1TotalBorrow = await crvCauldron1.totalBorrow();
-  const crvCauldron2TotalBorrow = await crvCauldron2.totalBorrow();
-  const totalBorrowElastic = crvCauldron1TotalBorrow[0].add(crvCauldron2TotalBorrow[0]);
-  console.log(`crvCauldron1TotalBorrow: ${crvCauldron1TotalBorrow.toString()}`);
-  console.log(`crvCauldron2TotalBorrow: ${crvCauldron2TotalBorrow.toString()}`);
-  console.log(`totalBorrowElastic (MIM): ${(totalBorrowElastic.toString() / 1e18).toLocaleString("us")}`);
-
-  const collateralRatio = totalBorrowElastic.mul(100).mul(BigNumber.from(10).pow(18)).div(totalPrincipalBalanceInUsd);
+  const collateralRatio = principal.mul(100).mul(BigNumber.from(10).pow(18)).div(collateralValueInUsd);
   console.log(`collateralRatio: ${collateralRatio.toString() / 1e18}`);
 
   // <= 40%
@@ -241,7 +248,6 @@ async function handle_AIP_13_6(cauldrons: string[], box: Contract, strategy: Con
   }
 
   console.log(`interestRate after ratio: ${interestRate.toString()}`);
-
 
   const quoteApi = "https://api.curve.fi/api/getPools/ethereum/factory-tricrypto";
   const quoteApiRes: any = await ky.get(quoteApi).json();
@@ -268,6 +274,17 @@ async function handle_AIP_13_6(cauldrons: string[], box: Contract, strategy: Con
   const currentInterest = await strategy.getYearlyInterestBips();
 
   const runCalldata: string[] = [];
+
+  // Need to account for the strategy allocation %
+  // When the strategy allocation is 50%, the interest rate should be doubled.
+  const strategyData = await box.strategyData(crvAddress);
+  const targetPercentage = strategyData[1];
+  console.log(`Strategy Allocation: ${targetPercentage.toString()}%`);
+  if (targetPercentage.gt(BigNumber.from(0))) {
+    const newInterest = interestRate.mul(BigNumber.from(100)).div(targetPercentage);
+    console.log(`${interestRate.toString()} -> ${newInterest.toString()}`);
+    interestRate = newInterest;
+  }
 
   if (!currentInterest.eq(interestRate)) {
     runCalldata.push(strategyIface.encodeFunctionData("setInterest", [interestRate.toString()]));
