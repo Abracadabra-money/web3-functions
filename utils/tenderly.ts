@@ -6,7 +6,7 @@ const SimulationUrlBuilder = {
             const value = values[i];
             const data = datas[i];
             const chainid = chainids[i];
-            console.log(`https://dashboard.tenderly.co/abracadabra/magic-internet-money/simulator/new?blockIndex=0&from=${from}&value=${value}&contractAddress=${to}&rawFunctionInput=${data}&network=${chainid}`);
+            console.log(`https://dashboard.tenderly.co/abracadabra/magic-internet-money/simulator/new?blockIndex=0&from=${from}&value=${value}&contractAddress=${to}&rawFunctionInput=${data}&network=${chainid}&stateOverrides=%5B%5D`);
         }
     }
 };

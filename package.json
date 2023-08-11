@@ -24,7 +24,8 @@
     "test:spell-staking-fantom": "hardhat w3f-run spell-staking --logs --network fantom",
     "test:magiclvl": "hardhat w3f-run magiclvl --logs --network bsc",
     "test:spell-swapper": "hardhat w3f-run spell-swapper --logs --network ethereum",
-    "test:negative-interests": "hardhat w3f-run negative-interests --logs --network ethereum",
+    "test:negative-interests": "cp web3-functions/negative-interests/userArgs.default.json web3-functions/negative-interests/userArgs.json;  hardhat w3f-run negative-interests --logs --network ethereum; rm web3-functions/negative-interests/userArgs.json",
+    "test:crv-negative-interests": "cp web3-functions/negative-interests/userArgs.crv.json web3-functions/negative-interests/userArgs.json; hardhat w3f-run negative-interests --logs --network ethereum; rm web3-functions/negative-interests/userArgs.json",
     "test:stargate": "hardhat w3f-run stargate --logs --network ethereum",
     "test:magiccurvelp-kava": "hardhat w3f-run magiccurvelp --logs --network kava"
   },
