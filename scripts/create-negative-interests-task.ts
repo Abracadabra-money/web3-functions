@@ -1,5 +1,5 @@
 import hre from "hardhat";
-import { AutomateSDK, Web3Function } from "@gelatonetwork/automate-sdk";
+import { AutomateSDK } from "@gelatonetwork/automate-sdk";
 
 const { ethers, w3f } = hre;
 

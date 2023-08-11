@@ -315,6 +315,7 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
     return {
       canExec: false,
       callData: [],
+      message: "Nothing to do"
     }
   }
 

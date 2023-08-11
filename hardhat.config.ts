@@ -11,7 +11,7 @@ dotenv.config({ path: __dirname + "/.env" });
 
 const PRIVATE_KEY = false; //process.env.PRIVATE_KEY;
 
-const config: HardhatUserConfig = {
+const config = {
   w3f: {
     rootDir: "./web3-functions",
     debug: false,

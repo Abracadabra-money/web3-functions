@@ -1,5 +1,5 @@
 import hre from "hardhat";
-import { AutomateSDK, Web3Function } from "@gelatonetwork/automate-sdk";
+import { AutomateSDK } from "@gelatonetwork/automate-sdk";
 
 const { ethers, w3f } = hre;
 
@@ -56,7 +56,7 @@ const main = async () => {
       },
     });
 
-    await automate.cancelTask(taskId);
+    //await automate.cancelTask(taskId);
 
     console.log(`to: ${tx.to}`);
     let data = tx.data.replace("9a688cc56f5f4fc75eaf8fdf18f43260ae43647c", "4D0c7842cD6a04f8EDB39883Db7817160DA159C3");

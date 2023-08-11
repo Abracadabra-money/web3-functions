@@ -1,4 +1,4 @@
-import { Contract, utils, BigNumber, constants } from "ethers";
+import { Contract, BigNumber, constants } from "ethers";
 import ky from "ky";
 import { Interface } from "ethers/lib/utils";
 import {
