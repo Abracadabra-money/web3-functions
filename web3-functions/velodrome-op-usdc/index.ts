@@ -4,44 +4,27 @@ import {
   Web3Function,
   Web3FunctionContext,
 } from "@gelatonetwork/web3-functions-sdk";
+import { SimulationUrlBuilder } from "../../utils/tenderly";
+
+const GELATO_PROXY = "0x4D0c7842cD6a04f8EDB39883Db7817160DA159C3";
 
 Web3Function.onRun(async (context: Web3FunctionContext) => {
-  const { userArgs, gelatoArgs, provider } = context;
+  const { userArgs, storage, gelatoArgs, multiChainProvider } = context;
+  const provider = multiChainProvider.default();
 
-  const execAddress =
-    (userArgs.execAddress as string) ??
-    "0x7E05363E225c1c8096b1cd233B59457104B84908";
-  let intervalInSeconds = (userArgs.intervalInSeconds as number) ?? 43200;
-  const wrapper =
-    (userArgs.wrapper as string) ??
-    "0x6eb1709e0b562097bf1cc48bc6a378446c297c04";
+  const execAddress = userArgs.execAddress as string;
+  let intervalInSeconds = userArgs.intervalInSeconds as number;
+  const wrapper = userArgs.wrapper as string;
+  const pair = userArgs.pair as string;
+  const router = userArgs.router as string;
+  const factory = userArgs.factory as string;
+  const wrapperRewardQuoteSlippageBips = userArgs.wrapperRewardQuoteSlippageBips as number;
+  const strategyRewardQuoteSlippageBips = userArgs.strategyRewardQuoteSlippageBips as number;
 
-  const pair =
-    (userArgs.pair as string) ?? "0x47029bc8f5cbe3b464004e87ef9c9419a48018cd";
-  const router =
-    (userArgs.router as string) ?? "0xa132DAB612dB5cB9fC9Ac426A0Cc215A3423F9c9";
-  const factory =
-    (userArgs.factory as string) ??
-    "0x25CbdDb98b35ab1FF77413456B31EC81A6B6B746";
-  const wrapperRewardQuoteSlippageBips =
-    (userArgs.wrapperRewardQuoteSlippageBips as number) ?? 100;
-  const strategyRewardQuoteSlippageBips =
-    (userArgs.strategyRewardQuoteSlippageBips as number) ?? 100;
-
-  const strategy =
-    (userArgs.strategy as string) ??
-    "0xa3372cd2178c52fdcb1f6e4c4e93014b4db3b20d";
-  const strategyLens =
-    (userArgs.strategyLens as string) ??
-    "0x8BEE5Db2315Df7868295c531B36BaA53439cf528";
-  const maxBentoBoxAmountIncreaseInBips =
-    (userArgs.maxBentoBoxAmountIncreaseInBips as number) ?? 1;
-  const maxBentoBoxChangeAmountInBips =
-    (userArgs.maxBentoBoxChangeAmountInBips as number) ?? 1000;
-
-  if (gelatoArgs.chainId == 9999999) {
-    intervalInSeconds = 0;
-  }
+  const strategy = userArgs.strategy as string;
+  const strategyLens = userArgs.strategyLens as string;
+  const maxBentoBoxAmountIncreaseInBips = userArgs.maxBentoBoxAmountIncreaseInBips as number;
+  const maxBentoBoxChangeAmountInBips = userArgs.maxBentoBoxChangeAmountInBips as number;
 
   let callee = new Array<string>(2);
   let data = new Array<string>(2);
@@ -74,21 +57,17 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
   const strategyContract = new Contract(strategy, strategyAbi, provider);
   const factoryContract = new Contract(factory, factoryAbi, provider);
 
-  let lastUpdated;
-
-  try {
-    lastUpdated = parseInt(await execContract.lastExecution(strategy));
-    console.log(`Last harvester update: ${lastUpdated}`);
-  } catch (err) {
-    console.error(err);
-    return { canExec: false, message: `Rpc call failed` };
-  }
+  const lastTimestampStr = (await storage.get("lastTimestamp")) ?? "0";
+  const lastTimestamp = parseInt(lastTimestampStr);
 
   // Check if it's ready for a new update
-  const timestamp = gelatoArgs.blockTime;
-  console.log(`Next update: ${lastUpdated + intervalInSeconds}`);
-  if (timestamp < lastUpdated + intervalInSeconds) {
-    return { canExec: false, message: `Time not elapsed` };
+  const timestamp = (
+    await provider.getBlock("latest")
+  ).timestamp;
+
+  console.log(`Next update: ${lastTimestamp + intervalInSeconds}`);
+  if (timestamp < lastTimestamp + intervalInSeconds) {
+    return { canExec: false, message: "Time not elapsed" };
   }
 
   const strategyToken = await strategyContract.strategyToken();
@@ -128,7 +107,7 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
       "function harvest(uint256) external returns (uint256)",
     ]);
     data[0] = iface.encodeFunctionData("harvest", [minLpOutFromWrapperRewards]);
-    logInfo(
+    console.info(
       `minLpOutFromWrapperRewards: ${minLpOutFromWrapperRewards.toString()}`
     );
   }
@@ -166,7 +145,7 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
       fee,
     ]);
 
-    logInfo(
+    console.info(
       `minLpOutFromStrategyRewards: ${minLpOutFromStrategyRewards.toString()}`
     );
   }
@@ -178,21 +157,25 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
     const iface = new Interface([
       "function run(address,uint256,uint256,address[],bytes[],bool) external",
     ]);
-    const callData = iface.encodeFunctionData("run", [
-      strategy,
-      maxBentoBoxAmountIncreaseInBips,
-      maxBentoBoxChangeAmountInBips,
-      callee.length > 0 ? callee : "[]", //'["' + callee.join('", "') + '"]' : "[]",
-      data.length > 0 ? data : "[]", //'["' + data.join('", "') + '"]' : "[]",
-      true,
-    ]);
+    const callData = {
+      to: execAddress,
+      data: iface.encodeFunctionData("run", [
+        strategy,
+        maxBentoBoxAmountIncreaseInBips,
+        maxBentoBoxChangeAmountInBips,
+        callee.length > 0 ? callee : "[]", //'["' + callee.join('", "') + '"]' : "[]",
+        data.length > 0 ? data : "[]", //'["' + data.join('", "') + '"]' : "[]",
+        true,
+      ])
+    };
 
-    return { canExec: true, callData, message: "Ready to execute" };
+    SimulationUrlBuilder.log([GELATO_PROXY], [callData.to], [0], [callData.data], [gelatoArgs.chainId]);
+
+    await storage.set("lastTimestamp", timestamp.toString());
+
+    return { canExec: true, callData: [callData], message: "Ready to execute" };
   }
 
   return { canExec: false, message: "Cannot execute" };
 });
 
-function logInfo(msg: string): void {
-  console.info(msg);
-}
