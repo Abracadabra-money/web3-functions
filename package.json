@@ -20,6 +20,7 @@
     "create-task:magicglp": "hardhat run ./scripts/create-magicglp-task.ts --network anvil",
     "create-task:velodrome-op-usdc": "hardhat run ./scripts/create-velodrome-op-usdc-task.ts --network anvil",
     "create-task:magicape": "hardhat run ./scripts/create-magicape-task.ts --network anvil",
+    "create-task:xf33d": "hardhat run ./scripts/create-xf33d-task.ts --network anvil",
     "test:spell-staking": "yarn test:spell-staking-mainnet && yarn test:spell-staking-avalanche && yarn test:spell-staking-arbitrum && yarn test:spell-staking-fantom",
     "test:spell-staking-mainnet": "hardhat w3f-run spell-staking --logs --network ethereum",
     "test:spell-staking-avalanche": "hardhat w3f-run spell-staking --logs --network avalanche",
@@ -34,7 +35,8 @@
     "test:magicglp-avalanche": "cp web3-functions/magicglp/userArgs.avalanche.json web3-functions/magicglp/userArgs.json; hardhat w3f-run magicglp --logs --network avalanche; rm web3-functions/magicglp/userArgs.json",
     "test:magicglp-arbitrum": "cp web3-functions/magicglp/userArgs.arbitrum.json web3-functions/magicglp/userArgs.json; hardhat w3f-run magicglp --logs --network arbitrum; rm web3-functions/magicglp/userArgs.json",
     "test:velodrome-op-usdc": "hardhat w3f-run velodrome-op-usdc --logs --network optimism",
-    "test:magicape": "hardhat w3f-run magicape --logs --network ethereum"
+    "test:magicape": "hardhat w3f-run magicape --logs --network ethereum",
+    "test:xf33d": "hardhat w3f-run xf33d --logs --network arbitrum"
   },
   "license": "ISC",
   "devDependencies": {
