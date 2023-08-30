@@ -17,44 +17,48 @@ const XF33D_ORACLE_ABI = [
   "function sendUpdatedRate(uint16,address) external payable",
 ]
 
+const CHAINLINK_AGGREGATOR_ABI = [
+  "function latestTimestamp() external view returns (uint256)",
+]
+
 Web3Function.onRun(async (context: Web3FunctionContext) => {
   const { userArgs, storage, gelatoArgs, multiChainProvider } = context;
   const provider = multiChainProvider.default();
-  const intervalInSeconds = userArgs.intervalInSeconds as number;
   const destinationChain = BigNumber.from(userArgs.destinationChain as number);
-  const chainlinkOracle = userArgs.chainlinkOracle as string;
+  const chainlinkOracleAddress = userArgs.chainlinkOracle as string;
 
   const feed = new Contract(XF33D_ORACLE_ADDRESS, XF33D_ORACLE_ABI, provider);
 
   const lastTimestampStr = (await storage.get("lastTimestamp")) ?? "0";
   const lastTimestamp = parseInt(lastTimestampStr);
 
-  // Check if it's ready for a new update
-  const timestamp = (
-    await provider.getBlock("latest")
-  ).timestamp;
+  const chainlinkOracle = new Contract(chainlinkOracleAddress, CHAINLINK_AGGREGATOR_ABI, provider);
 
-  console.log(`Next update: ${lastTimestamp + intervalInSeconds}`);
-  if (timestamp < lastTimestamp + intervalInSeconds) {
-    return { canExec: false, message: "Time not elapsed" };
+  const lastChainlinkTimestamp = parseInt((await chainlinkOracle.latestTimestamp()).toString());
+
+  console.log("lastTimestamp", lastTimestamp);
+  console.log("lastChainlinkTimestamp", lastChainlinkTimestamp);
+
+  if (lastChainlinkTimestamp <= lastTimestamp) {
+    return { canExec: false, message: "Not ready yet" };
   }
 
   const iface = new Interface(XF33D_ORACLE_ABI);
   const callData = [];
 
-  const fees = await feed.getFeesForFeedUpdate(destinationChain, chainlinkOracle);
+  const fees = await feed.getFeesForFeedUpdate(destinationChain, chainlinkOracleAddress);
   callData.push({
     to: XF33D_ORACLE_ADDRESS,
     data: iface.encodeFunctionData("sendUpdatedRate", [
       destinationChain,
-      chainlinkOracle
+      chainlinkOracleAddress
     ]),
     value: fees.toString()
   });
 
   SimulationUrlBuilder.log([GELATO_PROXY], [callData[0].to], [callData[0].value], [callData[0].data], [gelatoArgs.chainId]);
 
-  await storage.set("lastTimestamp", timestamp.toString());
+  await storage.set("lastTimestamp", lastChainlinkTimestamp.toString());
 
   return { canExec: true, callData };
 });

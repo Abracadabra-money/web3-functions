@@ -5,7 +5,6 @@
   "timeout": 30,
   "userArgs": {
     "destinationChain": "number",
-    "chainlinkOracle": "string",
-    "intervalInSeconds": "number"
+    "chainlinkOracle": "string"
   }
 }

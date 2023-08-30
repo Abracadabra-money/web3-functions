@@ -17,4 +17,4 @@
 | Withdrawer Arbitrum                    | [task](https://beta.app.gelato.network/task/0x1249301e1feb1610b5d9fdd84952e4bd9af1472689686b028590d4e119109fc0?chainId=42161)    |
 | Stargate S*USDT                        | [task](https://beta.app.gelato.network/task/0x4fad8f10aa51dd684632c670435b19be5ca018387f011fe16b8a43d7ea365b32?chainId=1)        |
 | Stargate S*USDC                        | [task](https://beta.app.gelato.network/task/0x87476e7d44999d633d755200604c8136d57b2e74569610e8592470e64224ccc4?chainId=1)        |
-| Xf33d ARB->KAVA USDT FeedUpdater       | [task](https://beta.app.gelato.network/task/0x3999a5d687122e0f0cac0892051daf3808dafb2ab7f814127f939a87caace904?chainId=42161)    |
+| XF33D USDT -> KAVA                     | [task](https://beta.app.gelato.network/task/0x6345259b0d7583771d6465f0a62436fa24bfc92a15a96afada8db2a9c970a199?chainId=42161)    |
