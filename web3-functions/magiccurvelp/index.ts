@@ -140,8 +140,8 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
   //SimulationUrlBuilder.log([gelatoProxyAddress], [callData[0].to], [0], [callData[0].data], [gelatoArgs.chainId]);
   await storage.set("lastTimestamp", timestamp.toString());
 
-  //cast send --rpc-url https://kava-mainnet-archival.gateway.pokt.network/v1/lb/8f10ba8f517b3e72e0adb5ff  --private-key $PRIVATE_KEY --legacy 0x591199E16E006Dec3eDcf79AE0fCea1Dd0F5b69D "add_liquidity(uint256[] memory,uint256)" "[0,4000000]" 0
-  const rpcUrl = "https://kava-mainnet-archival.gateway.pokt.network/v1/lb/8f10ba8f517b3e72e0adb5ff";
+  //cast send --rpc-url https://kava-mainnet-archival.gateway.pokt.network/v1/lb/3b9d1dd7  --private-key $PRIVATE_KEY --legacy 0x591199E16E006Dec3eDcf79AE0fCea1Dd0F5b69D "add_liquidity(uint256[] memory,uint256)" "[0,4000000]" 0
+  const rpcUrl = "https://kava-mainnet-archival.gateway.pokt.network/v1/lb/3b9d1dd7";
   console.log(`cast send --private-key=$PRIVATE_KEY --rpc-url=${rpcUrl} --legacy ${execAddress} ${callData[0].data}`);
   return { canExec: true, callData };
 });
