@@ -65,7 +65,7 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
       from: gelatoProxyAddress,
     });
 
-    if (!amountOutMin) throw Error(`failed to call swapToLP(0)`);
+    if (!amountOutMin) throw Error(`failed to call swapToLP`);
     console.log("amountOutMin", amountOutMin.toString());
     amountOutMin = amountOutMin.mul(BIPS - swapToLpSlippageBips).div(BIPS);
     console.log("amountOutMinWithSlippage", amountOutMin.toString());
