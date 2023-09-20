@@ -28,8 +28,6 @@ export const wrap = async (localProvider: StaticJsonRpcProvider, lzChainId: numb
         [calls]
     );
 
-    console.log("payload", payload);
-
     const lzMulticallContract = new Contract(LZ_MULTICALL_SENDER_RECEIVER_ADDRESS, lzMulticallAbi, localProvider);
     const lzEndpoint = new Contract(await lzMulticallContract.lzEndpoint(), endpointAbi, localProvider);
     const fee = (await lzEndpoint.estimateFees(lzChainId, LZ_MULTICALL_SENDER_RECEIVER_ADDRESS, payload, false, "0x"))[0];

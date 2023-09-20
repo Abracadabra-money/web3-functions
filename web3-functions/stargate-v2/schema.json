@@ -10,6 +10,7 @@
     "lpAddress": "string",
     "rewardAddress": "string",
     "underlyingAddress": "string",
+    "strategyExecutorAddress": "string",
     "gelatoProxyAddress": "string",
     "intervalInSeconds": "number",
     "swapSlippageBips": "number"

@@ -27,6 +27,7 @@ const main = async () => {
         lpAddress: "0xAad094F6A75A14417d39f04E690fC216f080A41a",
         rewardAddress: "0xc86c7C0eFbd6A49B35E8714C5f59D99De09A225b",
         underlyingAddress: "0x919C1c267BC06a7039e03fcc2eF738525769109c",
+        strategyExecutorAddress: "0x84C9Bb8B81037C642f2Eb6486a9bdfF526CdEbe0",
         gelatoProxyAddress: "0x4D0c7842cD6a04f8EDB39883Db7817160DA159C3",
         intervalInSeconds: 86400,
         swapSlippageBips: 50,

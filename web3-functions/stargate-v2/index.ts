@@ -38,13 +38,13 @@ const erc20Abi = [
 ];
 
 const BIPS = 10_000;
-const minRewardAmount = utils.parseEther("10");
+const minRewardAmount = utils.parseEther("0");
 
 Web3Function.onRun(async (context: Web3FunctionContext) => {
   const { userArgs, storage, multiChainProvider, gelatoArgs } = context;
   const provider = multiChainProvider.default();
   const targetChainId = userArgs.targetChainId as number;
-
+  const gelatoProxyAddress = userArgs.gelatoProxyAddress as string;
   const intervalInSeconds = userArgs.intervalInSeconds as number;
   const lastTimestampStr = (await storage.get("lastTimestamp")) ?? "0";
   const lastTimestamp = parseInt(lastTimestampStr);
@@ -73,7 +73,7 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
   });
 
   const useCrosschainMulticall = targetChainId != gelatoArgs.chainId;
-  let result = await run(api, targetChainProvider, context);
+  let result = await run(api, targetChainId, targetChainProvider, context);
 
   if (result.canExec) {
     // wrap to l0 bridging if needed
@@ -83,19 +83,20 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
     await storage.set("lastTimestamp", timestamp.toString());
 
     console.log(`cast send --private-key=$PRIVATE_KEY --rpc-url=https://kava-mainnet-archival.gateway.pokt.network/v1/lb/3b9d1dd7 --legacy ${result.callData[0].to} ${result.callData[0].data}`);
-
   }
+
+  SimulationUrlBuilder.log2(gelatoProxyAddress, gelatoArgs.chainId, result.callData);
 
   return result;
 });
 
-const run = async (api: KyInstance, provider: StaticJsonRpcProvider, context: Web3FunctionContext): Promise<Web3FunctionResult> => {
-  const { userArgs, gelatoArgs } = context;
+const run = async (api: KyInstance, chainId: number, provider: StaticJsonRpcProvider, context: Web3FunctionContext): Promise<Web3FunctionResult> => {
+  const { userArgs } = context;
   const execAddress = userArgs.execAddress as string;
   const degenBoxAddress = userArgs.degenBoxAddress as string;
   const lpAddress = userArgs.lpAddress as string;
   const rewardAddress = userArgs.rewardAddress as string;
-  const gelatoProxyAddress = userArgs.gelatoProxyAddress as string;
+  const strategyExecutorAddress = userArgs.strategyExecutorAddress as string;
   const swapSlippageBips = userArgs.swapSlippageBips as number;
   const underlyingAddress = userArgs.underlyingAddress as string;
 
@@ -113,11 +114,11 @@ const run = async (api: KyInstance, provider: StaticJsonRpcProvider, context: We
 
   // dont mint if the stg balance is too low
   if (rewardBalance.gte(minRewardAmount)) {
-    const swapInfo = await getSwapInfo(api, rewardAddress, underlyingAddress, gelatoArgs.chainId, execAddress, swapSlippageBips, rewardBalance.toString());
+    const swapInfo = await getSwapInfo(api, rewardAddress, underlyingAddress, chainId, execAddress, swapSlippageBips, rewardBalance.toString());
     console.log("swapInfo", JSON.stringify(swapInfo));
 
     let amountOutMin = await strategy.callStatic.swapToLP(0, swapInfo.data.toString(), {
-      from: gelatoProxyAddress,
+      from: strategyExecutorAddress,
     });
 
     if (!amountOutMin) throw Error(`failed to call swapToLP`);
@@ -127,7 +128,7 @@ const run = async (api: KyInstance, provider: StaticJsonRpcProvider, context: We
 
     callData.push({
       to: execAddress,
-      data: iface.encodeFunctionData("swapToLP", [amountOutMin.toString()])
+      data: iface.encodeFunctionData("swapToLP", [amountOutMin.toString(), swapInfo.data.toString()])
     });
   } else {
     console.log("Reward balance too low, not minting lp yet");
@@ -142,12 +143,6 @@ const run = async (api: KyInstance, provider: StaticJsonRpcProvider, context: We
       false
     ])
   });
-
-  SimulationUrlBuilder.log([gelatoProxyAddress], [callData[0].to], [0], [callData[0].data], [gelatoArgs.chainId]);
-
-  if (callData.length > 1) {
-    SimulationUrlBuilder.log([gelatoProxyAddress], [callData[1].to], [0], [callData[1].data], [gelatoArgs.chainId]);
-  }
 
   return { canExec: true, callData };
 }
