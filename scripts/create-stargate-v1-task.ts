@@ -4,7 +4,7 @@ import { AutomateSDK } from "@gelatonetwork/automate-sdk";
 const { ethers, w3f } = hre;
 
 const main = async () => {
-  const stargateW3f = w3f.get("stargate");
+  const stargateW3f = w3f.get("stargate-v1");
 
   const [deployer] = await ethers.getSigners();
   const chainId = (await ethers.provider.getNetwork()).chainId;

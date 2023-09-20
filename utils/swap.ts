@@ -10,7 +10,7 @@ export const getSwapInfo = async (api: KyInstance, tokenIn: string, tokenOut: st
                 .json();
 
             const gasPrice = response["standard"];
-            url = `https://ethapi.openocean.finance/v2/2222/swap?inTokenAddress=${tokenIn}&outTokenAddress=${tokenOut}&amount=${amount}&gasPrice=${gasPrice}&disabledDexIds=&slippage=${swapRewardsSlippageBips}&account=${fromAccount}`;
+            url = `https://ethapi.openocean.finance/v2/2222/swap?inTokenAddress=${tokenIn}&outTokenAddress=${tokenOut}&amount=${amount}&gasPrice=${gasPrice}&disabledDexIds=&slippage=${slippageBips}&account=${fromAccount}`;
             console.log(url);
             response = await api
                 .get(url, { timeout: 10_000, retry: 0 })

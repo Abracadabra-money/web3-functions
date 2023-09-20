@@ -4,7 +4,7 @@ import { AutomateSDK } from "@gelatonetwork/automate-sdk";
 const { ethers, w3f } = hre;
 
 const main = async () => {
-  const stargateW3f = w3f.get("stargate");
+  const stargateW3f = w3f.get("stargate-v2");
 
   const [deployer] = await ethers.getSigners();
   const chainId = (await ethers.provider.getNetwork()).chainId;
@@ -22,13 +22,15 @@ const main = async () => {
       name: "",
       web3FunctionHash: cid,
       web3FunctionArgs: {
-        execAddress: "0x30D525cbB79D2baaE7637eA748631a6360Ce7c16",
+        execAddress: "0x86130dac04869a8201c7077270c10f3afaba1c82",
         degenBoxAddress: "0x630FC1758De85C566Bdec1D75A894794E1819d7E",
         lpAddress: "0xAad094F6A75A14417d39f04E690fC216f080A41a",
         rewardAddress: "0xc86c7C0eFbd6A49B35E8714C5f59D99De09A225b",
-        gelatoProxyAddress: "",
+        underlyingAddress: "0x919C1c267BC06a7039e03fcc2eF738525769109c",
+        gelatoProxyAddress: "0x4D0c7842cD6a04f8EDB39883Db7817160DA159C3",
         intervalInSeconds: 86400,
-        swapToLpSlippageBips: 50
+        swapSlippageBips: 50,
+        targetChainId: 2222
       },
     });
     console.log(`to: ${task.tx.to}`);

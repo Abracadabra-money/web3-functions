@@ -4,6 +4,7 @@
   "memory": 128,
   "timeout": 30,
   "userArgs": {
+    "targetChainId": "number",
     "execAddress": "string",
     "degenBoxAddress": "string",
     "lpAddress": "string",
@@ -11,6 +12,6 @@
     "underlyingAddress": "string",
     "gelatoProxyAddress": "string",
     "intervalInSeconds": "number",
-    "swapToLpSlippageBips": "number"
+    "swapSlippageBips": "number"
   }
 }

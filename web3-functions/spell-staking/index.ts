@@ -4,6 +4,7 @@ import {
 } from "@gelatonetwork/web3-functions-sdk";
 import { BigNumber, Contract, utils } from "ethers";
 import { SimulationUrlBuilder } from "../../utils/tenderly";
+import { LZ_CHAIN_IDS } from "../../utils/lz";
 
 // import the above using require so that it's javascript objects
 const WITHDRAWER_ABI = require("./abi/CauldronFeeWithdrawer.json");
@@ -85,13 +86,6 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
   // supported chains
   const ALTCHAIN_IDS = [250, 43114, 42161];
   const CHAIN_IDS = [1, ...ALTCHAIN_IDS];
-
-  const LZ_CHAIN_IDS: { [key: number]: number } = {
-    1: 101,
-    250: 112,
-    43114: 106,
-    42161: 110,
-  };
 
   /////////////////////////////////////////////////
   // Initialization
