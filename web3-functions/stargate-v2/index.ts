@@ -67,7 +67,7 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
   if (result.canExec) {
     // wrap to l0 bridging if needed
     if (useCrosschainMulticall) {
-      result = await wrap(provider, LZ_CHAIN_IDS[targetChainId], result);
+      result = await wrap(provider, targetChainProvider, LZ_CHAIN_IDS[targetChainId], result);
     }
     await storage.set("lastTimestamp", timestamp.toString());
 
