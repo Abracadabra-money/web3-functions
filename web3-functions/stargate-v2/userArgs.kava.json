@@ -8,5 +8,6 @@
     "gelatoProxyAddress": "0x4D0c7842cD6a04f8EDB39883Db7817160DA159C3",
     "intervalInSeconds": 86400,
     "swapSlippageBips": 50,
-    "targetChainId": 2222
+    "targetChainId": 2222,
+    "minRewardAmount": "10"
 }

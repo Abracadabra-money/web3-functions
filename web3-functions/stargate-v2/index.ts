@@ -23,22 +23,11 @@ const degenBoxAbi = [
   "function totals(address) external view returns (uint128,uint128)",
 ];
 
-const strategyExecutorAbi = [
-  // strategy: (strategy executor address)
-  // maxBentoBoxAmountIncreaseInBips (suggested: 1)
-  // maxBentoBoxChangeAmountInBips: (suggested: 1000)
-  // callee: (list of addresses to call)
-  // data: (list of calldata for each address)
-  // postRebalanceEnabled: (suggested: true)
-  "function run(address,uint256,uint256,address[],bytes[],bool) external",
-]
-
 const erc20Abi = [
   "function balanceOf(address) external view returns (uint256)",
 ];
 
 const BIPS = 10_000;
-const minRewardAmount = utils.parseEther("0");
 
 Web3Function.onRun(async (context: Web3FunctionContext) => {
   const { userArgs, storage, multiChainProvider, gelatoArgs } = context;
@@ -99,6 +88,7 @@ const run = async (api: KyInstance, chainId: number, provider: StaticJsonRpcProv
   const strategyExecutorAddress = userArgs.strategyExecutorAddress as string;
   const swapSlippageBips = userArgs.swapSlippageBips as number;
   const underlyingAddress = userArgs.underlyingAddress as string;
+  const minRewardAmount = userArgs.minRewardAmount as string;
 
   const strategy = new Contract(execAddress, strategyAbi, provider);
   const box = new Contract(degenBoxAddress, degenBoxAbi, provider);
