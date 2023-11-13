@@ -75,7 +75,7 @@ const config = {
     },
     kava: {
       chainId: 2222,
-      url: "https://kava-rpc.gateway.pokt.network",
+      url: "https://kava-evm.publicnode.com",
       accounts: PRIVATE_KEY ? [PRIVATE_KEY] : [],
     },
     base: {

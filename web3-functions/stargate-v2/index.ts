@@ -38,7 +38,7 @@ const erc20Abi = [
 ];
 
 const BIPS = 10_000;
-const minRewardAmount = utils.parseEther("0");
+const minRewardAmount = utils.parseEther("1");
 
 Web3Function.onRun(async (context: Web3FunctionContext) => {
   const { userArgs, storage, multiChainProvider, gelatoArgs } = context;
@@ -105,12 +105,14 @@ const run = async (api: KyInstance, chainId: number, provider: StaticJsonRpcProv
   const reward = new Contract(rewardAddress, erc20Abi, provider);
 
   const iface = new Interface(strategyAbi);
-  const callData = [];
   const rewardBalance = await reward.balanceOf(execAddress);
   const totalElastic = (await box.callStatic.totals(lpAddress))[0];
 
   console.log("totalElastic", totalElastic.toString());
   console.log("Reward balance", rewardBalance.toString());
+
+  const runCalldata: string[] = [];
+  const callees: string[] = [];
 
   // dont mint if the stg balance is too low
   if (rewardBalance.gte(minRewardAmount)) {
@@ -126,23 +128,25 @@ const run = async (api: KyInstance, chainId: number, provider: StaticJsonRpcProv
     amountOutMin = amountOutMin.mul(BIPS - swapSlippageBips).div(BIPS);
     console.log("amountOutMinWithSlippage", amountOutMin.toString());
 
-    callData.push({
-      to: execAddress,
-      data: iface.encodeFunctionData("swapToLP", [amountOutMin.toString(), swapInfo.data.toString()])
-    });
+    callees.push(execAddress);
+    runCalldata.push(iface.encodeFunctionData("swapToLP", [amountOutMin.toString(), swapInfo.data.toString()]));
   } else {
     console.log("Reward balance too low, not minting lp yet");
   }
 
-  callData.push({
-    to: execAddress,
-    data: iface.encodeFunctionData("safeHarvest", [
-      totalElastic.toString(),
-      true,
-      totalElastic.div(10).toString(),
-      false
-    ])
-  });
+  const strategyExecutorIFace = new Interface(strategyExecutorAbi);
 
-  return { canExec: true, callData };
+  const callData = {
+    to: execAddress,
+    data: strategyExecutorIFace.encodeFunctionData("run", [
+      execAddress,
+      "1",
+      "1000",
+      callees,
+      runCalldata,
+      runCalldata.length > 0
+    ])
+  };
+
+  return { canExec: true, callData: [callData] };
 }

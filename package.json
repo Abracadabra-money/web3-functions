@@ -32,7 +32,7 @@
     "test:negative-interests": "cp web3-functions/negative-interests/userArgs.default.json web3-functions/negative-interests/userArgs.json;  hardhat w3f-run negative-interests --logs --network ethereum; rm web3-functions/negative-interests/userArgs.json",
     "test:crv-negative-interests": "cp web3-functions/negative-interests/userArgs.crv.json web3-functions/negative-interests/userArgs.json; hardhat w3f-run negative-interests --logs --network ethereum; rm web3-functions/negative-interests/userArgs.json",
     "test:stargate-v1": "hardhat w3f-run stargate-v1 --logs --network ethereum",
-    "test:stargate-v2-kava": "cp web3-functions/stargate-v2/userArgs.kava.json web3-functions/stargate-v2/userArgs.json; hardhat w3f-run stargate-v2 --logs --network arbitrum; rm web3-functions/stargate-v2/userArgs.json",
+    "test:stargate-v2-kava": "cp web3-functions/stargate-v2/userArgs.kava.json web3-functions/stargate-v2/userArgs.json; hardhat w3f-run stargate-v2 --logs --network kava; rm web3-functions/stargate-v2/userArgs.json",
     "test:magiccurvelp-kava": "cp web3-functions/magiccurvelp/userArgs.kava.json web3-functions/magiccurvelp/userArgs.json; hardhat w3f-run magiccurvelp --logs --network kava; rm web3-functions/magiccurvelp/userArgs.json",
     "test:magicglp-avalanche": "cp web3-functions/magicglp/userArgs.avalanche.json web3-functions/magicglp/userArgs.json; hardhat w3f-run magicglp --logs --network avalanche; rm web3-functions/magicglp/userArgs.json",
     "test:magicglp-arbitrum": "cp web3-functions/magicglp/userArgs.arbitrum.json web3-functions/magicglp/userArgs.json; hardhat w3f-run magicglp --logs --network arbitrum; rm web3-functions/magicglp/userArgs.json",
