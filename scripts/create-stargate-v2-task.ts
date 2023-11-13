@@ -17,18 +17,19 @@ const main = async () => {
   console.log(`Web3Function IPFS CID: ${cid}`);
 
   {
-    console.log("Creating Kava Stargate-USDT Task");
+    console.log("Creating Arbitrum->Kava Stargate-USDT Task");
     const task = await automate.createBatchExecTask({
       name: "",
       web3FunctionHash: cid,
       web3FunctionArgs: {
-        execAddress: "0x86130dac04869a8201c7077270c10f3afaba1c82",
+        execAddress: "0x30D525cbB79D2baaE7637eA748631a6360Ce7c16",
         degenBoxAddress: "0x630FC1758De85C566Bdec1D75A894794E1819d7E",
         lpAddress: "0xAad094F6A75A14417d39f04E690fC216f080A41a",
         rewardAddress: "0xc86c7C0eFbd6A49B35E8714C5f59D99De09A225b",
         underlyingAddress: "0x919C1c267BC06a7039e03fcc2eF738525769109c",
         strategyExecutorAddress: "0x84C9Bb8B81037C642f2Eb6486a9bdfF526CdEbe0",
         gelatoProxyAddress: "0x4D0c7842cD6a04f8EDB39883Db7817160DA159C3",
+        minRewardAmount: "10000000000000000000",
         intervalInSeconds: 86400,
         swapSlippageBips: 50,
         targetChainId: 2222
