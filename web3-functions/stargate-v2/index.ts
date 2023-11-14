@@ -27,6 +27,10 @@ const erc20Abi = [
   "function balanceOf(address) external view returns (uint256)",
 ];
 
+const strategyExecutorAbi = [
+  "function run(address,uint256,uint256,address[],bytes[],bool)"
+];
+
 const BIPS = 10_000;
 
 Web3Function.onRun(async (context: Web3FunctionContext) => {
@@ -67,7 +71,7 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
   if (result.canExec) {
     // wrap to l0 bridging if needed
     if (useCrosschainMulticall) {
-      result = await wrap(provider, targetChainProvider, LZ_CHAIN_IDS[targetChainId], result);
+      result = await wrap("", provider, targetChainProvider, LZ_CHAIN_IDS[targetChainId], result);
     }
     await storage.set("lastTimestamp", timestamp.toString());
 
@@ -127,7 +131,7 @@ const run = async (api: KyInstance, chainId: number, provider: StaticJsonRpcProv
   const strategyExecutorIFace = new Interface(strategyExecutorAbi);
 
   const callData = {
-    to: execAddress,
+    to: strategyExecutorAddress,
     data: strategyExecutorIFace.encodeFunctionData("run", [
       execAddress,
       "1",
