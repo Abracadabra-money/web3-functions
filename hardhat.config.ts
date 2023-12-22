@@ -35,12 +35,12 @@ const config = {
       url: "http://127.0.0.1:8545/",
       launch: true,
       chainId: 1,
-      forkUrl: "https://eth-rpc.gateway.pokt.network",
+      forkUrl: "https://rpc.ankr.com/eth",
       accounts: PRIVATE_KEY ? [PRIVATE_KEY] : [],
     },
     ethereum: {
       chainId: 1,
-      url: "https://eth-rpc.gateway.pokt.network",
+      url: "https://rpc.ankr.com/eth",
       accounts: PRIVATE_KEY ? [PRIVATE_KEY] : [],
     },
     avalanche: {
