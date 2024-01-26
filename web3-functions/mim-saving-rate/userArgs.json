@@ -1,0 +1,5 @@
+{
+  "execAddress": "0x20f2b910bee18125f34c07925bbfe344a139646f",
+  "subgraphUrl": "https://api.thegraph.com/subgraphs/name/0xmdreamy/mim-saving-rate",
+  "lockLimitPerExecution": 50
+}
