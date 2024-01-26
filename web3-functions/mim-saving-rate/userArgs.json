@@ -1,0 +1,5 @@
+{
+  "execAddress": "0x98164deD88e2a4862BdE8E7D4B831a6e3BE02D0A",
+  "subgraphUrl": "https://api.studio.thegraph.com/query/59137/mim-saving-rate-arbitrum/version/latest",
+  "lockLimitPerExecution": 100
+}

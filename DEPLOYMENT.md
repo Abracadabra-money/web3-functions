@@ -12,6 +12,7 @@
 | MagicLevel Senior                      | [task](https://app.gelato.network/functions/task/0x8e9a7e8f1ee903682f3b70038416a0a8d5deaa28a6e8d933f9712e804b9e6441:56)          |
 | MagicLevel Mezzanine                   | [task](https://app.gelato.network/functions/task/0x255dc869c34aa53f8a0d944f458aacf05f37e5ff53eb797d9c8bce1cba399685:56)          |
 | MagicLevel Junior                      | [task](https://app.gelato.network/functions/task/0x464be4d56d973a9b8597543d750d45da5cd37970456351c76f45cdfe3fe49de4:56)          |
+| MSR Arbitrum                           | [task](https://app.gelato.network/functions/task/0x980407fc152de92f9c1730ba58902dee2bfe572cec04efcf6e47e71686b10501:42161)       |
 | Distributor Mainnet                    | [task](https://app.gelato.network/functions/task/0x4db2dd79637c5942307ebce48b85fa921c9229d3627d8790c1ed4d0052cfb4d2:1)           |
 | Withdrawer Arbitrum                    | [task](https://app.gelato.network/functions/task/0x1249301e1feb1610b5d9fdd84952e4bd9af1472689686b028590d4e119109fc0:42161)       |
 | Stargate S*USDT                        | [task](https://app.gelato.network/functions/task/0x37ab785e9a1200fb8bac63b431e36da085b177841b24aa0dfab0a4981122da0a:1)           |
