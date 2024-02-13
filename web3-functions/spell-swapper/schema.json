@@ -5,6 +5,11 @@
   "timeout": 30,
   "userArgs": {
     "execAddress": "string",
-    "zeroExApiBaseUrl": "string"
+    "zeroExApiBaseUrl": "string",
+    "minimumInputAmount": "string",
+    "maximumInputAmount": "string",
+    "minimumOutputAmount": "string",
+    "maximumSwapSlippageBips": "number",
+    "sellFrequencySeconds": "number"
   }
 }

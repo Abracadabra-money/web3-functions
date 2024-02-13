@@ -1,7 +1,11 @@
 import hre from "hardhat";
-import { AutomateSDK } from "@gelatonetwork/automate-sdk";
+import { AutomateSDK, TriggerType } from "@gelatonetwork/automate-sdk";
+import { DEVOPS_SAFE } from "../utils/constants";
 
 const { ethers, w3f } = hre;
+
+const FIVE_MINUTES_MILLIS = 5 * 60 * 1000;
+const FOUR_HOURS_SECONDS = 4 * 60 * 60;
 
 const main = async () => {
   const spellSwapperW3f = w3f.get("spell-swapper");
@@ -16,22 +20,28 @@ const main = async () => {
   const cid = await spellSwapperW3f.deploy();
   console.log(`Web3Function IPFS CID: ${cid}`);
 
-  {
-    console.log("Creating Mainnet Task");
-    const task = await automate.createBatchExecTask({
-      name: "SpellSwapping",
-      web3FunctionHash: cid,
-      web3FunctionArgs: {
-        execAddress: "0xdFE1a5b757523Ca6F7f049ac02151808E6A52111",
-        zeroExApiBaseUrl: "https://api.0x.org"
-      },
-    });
-    console.log(`to: ${task.tx.to}`);
-    let data = task.tx.data.replace("9a688cc56f5f4fc75eaf8fdf18f43260ae43647c", "4D0c7842cD6a04f8EDB39883Db7817160DA159C3");
-    console.log(data);
-    console.log("------------------");
-    console.log();
-  }
+  console.log("Creating Mainnet Task");
+  const { tx: { to, data } } = await automate.prepareBatchExecTask({
+    name: "SpellSwapping",
+    web3FunctionHash: cid,
+    trigger: {
+      type: TriggerType.TIME,
+      interval: FIVE_MINUTES_MILLIS,
+    },
+    web3FunctionArgs: {
+      execAddress: "0xdFE1a5b757523Ca6F7f049ac02151808E6A52111",
+      zeroExApiBaseUrl: "https://api.0x.org",
+      minimumInputAmount: "1000",
+      maximumInputAmount: "10000",
+      minimumOutputAmount: "100000",
+      maximumSwapSlippageBips: 25,
+      sellFrequencySeconds: FOUR_HOURS_SECONDS,
+    },
+  }, {}, DEVOPS_SAFE);
+  console.log(`to: ${to}`);
+  console.log(data);
+  console.log("------------------");
+  console.log();
 };
 
 main()
