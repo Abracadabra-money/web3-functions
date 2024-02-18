@@ -14,7 +14,7 @@
     "create-task:gm": "hardhat run ./scripts/create-gm-task.ts --network ethereum",
     "create-task:spell-staking": "killall -9 anvil; hardhat run ./scripts/create-spell-staking-task.ts --network anvil",
     "create-task:magiclvl": "hardhat run ./scripts/create-magiclvl-task.ts --network anvil",
-    "create-task:spellswapper": "hardhat run ./scripts/create-spell-swapper-task.ts --network anvil",
+    "create-task:spell-swapper": "hardhat run ./scripts/create-spell-swapper-task.ts --network ethereum",
     "create-task:negative-interests": "hardhat run ./scripts/create-negative-interests-task.ts --network anvil",
     "create-task:stargate-v1": "hardhat run ./scripts/create-stargate-v1-task.ts --network anvil",
     "create-task:stargate-v2": "hardhat run ./scripts/create-stargate-v2-task.ts --network anvil",

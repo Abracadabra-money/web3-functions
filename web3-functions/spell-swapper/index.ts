@@ -3,13 +3,13 @@ import {
   Web3FunctionContext,
 } from "@gelatonetwork/web3-functions-sdk";
 import { BigNumber, Contract, utils } from "ethers";
-import ky from "ky";
+import { Hex } from "../../utils/types";
+import { zeroExQuote, QuoteResponse } from "../../utils/zeroEx";
 
-const HARVESTER_ABI = [
-  "function lastExecution() external view returns(uint256)",
-  "function totalRewardsBalanceAfterClaiming() external view returns(uint256)",
-  "function run(uint256) external",
-];
+const BIPS = 10_000;
+
+const MIM_ADDRESS = "0x99D8a9C45b2ecA8864373A26D1459e3Dff1e17F3";
+const SPELL_ADDRESS = "0x090185f2135308BaD17527004364eBcC2D37e5F6";
 
 const TOKEN_ABI = [
   "function balanceOf(address) external view returns(uint256)",
@@ -17,16 +17,35 @@ const TOKEN_ABI = [
 
 const SWAPPER_ABI = ["function swapMimForSpell1Inch(address,bytes) external"];
 
+type SpellSwapperUserArgs = {
+  execAddress: Hex;
+  zeroExApiBaseUrl: string;
+  minimumInputAmount: string;
+  maximumInputAmount: string;
+  minimumOutputAmount: string;
+  maximumSwapSlippageBips: number;
+  sellFrequencySeconds: number;
+};
+
 Web3Function.onRun(async (context: Web3FunctionContext) => {
   const { userArgs, storage, multiChainProvider } = context;
 
   const provider = multiChainProvider.default();
 
   // Retrieve Last oracle update time
-  const execAddress = userArgs.execAddress as string;
-  const zeroExApiBaseUrl = userArgs.zeroExApiBaseUrl;
-  const fromTokenAddress = "0x99D8a9C45b2ecA8864373A26D1459e3Dff1e17F3"; // MIM
-  const toTokenAddress = "0x090185f2135308BaD17527004364eBcC2D37e5F6"; // SPELL
+  const {
+    execAddress,
+    zeroExApiBaseUrl,
+    minimumInputAmount,
+    maximumInputAmount,
+    minimumOutputAmount,
+    maximumSwapSlippageBips,
+    sellFrequencySeconds,
+  } = userArgs as SpellSwapperUserArgs;
+
+  if (minimumInputAmount > maximumInputAmount) {
+    return { canExec: false, message: "Bad userArgs: minimumInputAmount is greater than maximumInputAmount" }
+  }
 
   const lastTimestampStr = (await storage.get("lastTimestamp")) ?? "0";
   const lastTimestamp = parseInt(lastTimestampStr);
@@ -36,66 +55,47 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
     return { canExec: false, message: "ZEROX_API_KEY not set in secrets" };
   }
 
-  let fromTokenAmount;
-  let mim;
+  const timestamp = Math.floor(Date.now() / 1000);
 
-  const timestamp = (
-    await provider.getBlock("latest")
-  ).timestamp;
-
-  if (timestamp < lastTimestamp + 3600) {
+  if (timestamp < lastTimestamp + sellFrequencySeconds) {
     // Update storage to persist your current state (values must be cast to string)
     return { canExec: false, message: "Time not elapsed" };
   }
 
+  let sellAmount: BigNumber;
   try {
-    mim = new Contract(fromTokenAddress, TOKEN_ABI, provider);
-    const fromTokenAmountBN = await mim.balanceOf(execAddress);
-    if (fromTokenAmountBN.lt(utils.parseEther("100"))) {
-      return { canExec: false, message: `not enough mim` };
+    const mimContract = new Contract(MIM_ADDRESS, TOKEN_ABI, provider);
+    const mimBalance: BigNumber = await mimContract.balanceOf(execAddress);
+    if (mimBalance.lt(utils.parseEther(minimumInputAmount))) {
+      return { canExec: false, message: "Not enough MIM" };
     }
-    fromTokenAmount =
-      fromTokenAmountBN <= utils.parseEther("10000")
-        ? fromTokenAmountBN.toString()
-        : utils.parseEther("10000").toString();
+    sellAmount =
+      mimBalance.lte(utils.parseEther(maximumInputAmount))
+        ? mimBalance
+        : utils.parseEther(maximumInputAmount);
   } catch (err) {
     return { canExec: false, message: "Rpc call failed" };
   }
 
-  const api = ky.extend({
-    hooks: {
-      beforeRequest: [
-        request => {
-          request.headers.set('0x-api-key', apiKey);
-        }
-      ]
-    }
-  });
+  let quote: QuoteResponse;
+  try {
+    quote = await zeroExQuote({
+      endpoint: zeroExApiBaseUrl,
+      apiKey,
+      buyToken: SPELL_ADDRESS,
+      sellToken: MIM_ADDRESS,
+      sellAmount,
+      slippagePercentage: maximumSwapSlippageBips / BIPS,
+    });
+  } catch (err) {
+    return { canExec: false, message: `Quote Error: ${err}` }
+  }
 
-  const quoteApi = `${zeroExApiBaseUrl}/swap/v1/quote?buyToken=${toTokenAddress}&sellToken=${fromTokenAddress}&sellAmount=${fromTokenAmount.toString()}`;
-  logInfo(quoteApi);
-  const quoteApiRes: any = await api.get(quoteApi).json();
+  console.log(`Swap ${utils.formatEther(sellAmount)} MIM to ${utils.formatEther(quote.buyAmount)} SPELL`);
 
-  if (!quoteApiRes) throw Error("Get quote api failed");
-  const quoteResObj = quoteApiRes;
-
-  let value = quoteResObj.buyAmount;
-  if (!value) throw Error("No buyAmount");
-  const toTokenAmount = BigNumber.from(value);
-
-  console.log(utils.formatEther(fromTokenAmount));
-  console.log(utils.formatEther(toTokenAmount).toString());
-
-  if (toTokenAmount.lt(utils.parseEther("100000")))
-    return { canExec: false, message: "not enough on contract" };
-
-  value = quoteResObj.data;
-  if (!value) throw Error("No data");
-  const data = value.toString();
-
-  value = quoteResObj.to;
-  if (!value) throw Error("No data");
-  const routerAddress = value.toString();
+  if (BigNumber.from(quote.buyAmount).lt(utils.parseEther(minimumOutputAmount))) {
+    return { canExec: false, message: "Not enough SPELL received" };
+  }
 
   const swapper = new Contract(execAddress, SWAPPER_ABI, provider);
 
@@ -106,13 +106,10 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
     callData: [{
       to: execAddress,
       data: swapper.interface.encodeFunctionData("swapMimForSpell1Inch", [
-        routerAddress,
-        data,
+        quote.to,
+        quote.data,
       ])
     }],
   };
 });
 
-function logInfo(msg: string): void {
-  console.info(msg);
-}
