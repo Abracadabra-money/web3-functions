@@ -14,6 +14,7 @@
     "create-task:gm": "hardhat run ./scripts/create-gm-task.ts --network ethereum",
     "create-task:spell-staking": "killall -9 anvil; hardhat run ./scripts/create-spell-staking-task.ts --network anvil",
     "create-task:magiclvl": "hardhat run ./scripts/create-magiclvl-task.ts --network anvil",
+    "create-task:mim-saving-rate": "hardhat run ./scripts/create-mim-saving-rate-task.ts --network arbitrum",
     "create-task:spell-swapper": "hardhat run ./scripts/create-spell-swapper-task.ts --network ethereum",
     "create-task:negative-interests": "hardhat run ./scripts/create-negative-interests-task.ts --network anvil",
     "create-task:stargate-v1": "hardhat run ./scripts/create-stargate-v1-task.ts --network anvil",
@@ -34,6 +35,7 @@
     "test:gm:gmlink": "cp web3-functions/gm/userArgs.gmlink.json web3-functions/gm/userArgs.json && hardhat w3f-run gm --logs --network arbitrum",
     "test:gm:gmsol": "cp web3-functions/gm/userArgs.gmsol.json web3-functions/gm/userArgs.json && hardhat w3f-run gm --logs --network arbitrum",
     "test:magiclvl": "hardhat w3f-run magiclvl --logs --network bsc",
+    "test:mim-saving-rate": "hardhat w3f-run mim-saving-rate --logs --network arbitrum",
     "test:spell-swapper": "hardhat w3f-run spell-swapper --logs --network ethereum",
     "test:negative-interests": "cp web3-functions/negative-interests/userArgs.default.json web3-functions/negative-interests/userArgs.json;  hardhat w3f-run negative-interests --logs --network ethereum; rm web3-functions/negative-interests/userArgs.json",
     "test:crv-negative-interests": "cp web3-functions/negative-interests/userArgs.crv.json web3-functions/negative-interests/userArgs.json; hardhat w3f-run negative-interests --logs --network ethereum; rm web3-functions/negative-interests/userArgs.json",
@@ -85,6 +87,7 @@
   "dependencies": {
     "@gelatonetwork/automate-sdk": "^3.0.0",
     "@gelatonetwork/web3-functions-sdk": "^2.0.3",
+    "@urql/core": "^4.2.3",
     "ky": "^0.33.2"
   }
 }
