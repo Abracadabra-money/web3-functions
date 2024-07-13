@@ -1,4 +1,4 @@
-import { KyInstance } from "ky/distribution/types/ky";
+import { KyInstance } from "ky";
 
 export const getSwapInfo = async (api: KyInstance, tokenIn: string, tokenOut: string, chainId: number, fromAccount: string, slippageBips: number, amount: string): Promise<{ data: string, minOutAmount: string }> => {
     switch (chainId) {

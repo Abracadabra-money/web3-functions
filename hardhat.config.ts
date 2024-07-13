@@ -1,8 +1,6 @@
 import { HardhatUserConfig } from "hardhat/config";
 import "@gelatonetwork/web3-functions-sdk/hardhat-plugin";
-import "@typechain/hardhat";
 import "@nomiclabs/hardhat-ethers";
-import "@nomiclabs/hardhat-waffle";
 import "@foundry-rs/hardhat-anvil";
 
 // Process Env Variables
@@ -89,6 +87,6 @@ const config = {
       accounts: PRIVATE_KEY ? [PRIVATE_KEY] : [],
     },
   },
-};
+} satisfies HardhatUserConfig | Object;
 
 export default config;

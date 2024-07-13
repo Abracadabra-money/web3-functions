@@ -2,7 +2,7 @@ import { Contract, utils } from "ethers";
 import { Interface } from "ethers/lib/utils";
 import { getProvider } from "../../utils/providers";
 
-import ky from "ky";
+import ky, { KyInstance } from "ky";
 import {
   Web3Function,
   Web3FunctionContext,
@@ -11,7 +11,6 @@ import {
 import { SimulationUrlBuilder } from "../../utils/tenderly";
 import { getSwapInfo } from "../../utils/swap";
 import { wrap } from "../../utils/crosschainMulticall";
-import { KyInstance } from "ky/distribution/types/ky";
 import { StaticJsonRpcProvider } from "@ethersproject/providers";
 import { LZ_CHAIN_IDS } from "../../utils/lz";
 
