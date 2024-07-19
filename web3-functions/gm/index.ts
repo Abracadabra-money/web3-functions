@@ -3,8 +3,8 @@ import {
 	type Web3FunctionContext,
 	type Web3FunctionResultCallData,
 } from "@gelatonetwork/web3-functions-sdk";
-import { BigNumber, Contract } from "ethers";
 
+import { type Address, encodeFunctionData, parseAbi } from "viem";
 import {
 	getDepositAmountOut,
 	getDepositSingleTokenGasLimit,
@@ -12,42 +12,42 @@ import {
 	getSingleSwapGasLimit,
 } from "../../utils/gm";
 import { SimulationUrlBuilder } from "../../utils/tenderly";
-import type { Hex } from "../../utils/types";
+import { createJsonRpcPublicClient } from "../../utils/viem";
 import { zeroExQuote } from "../../utils/zeroEx";
 
-const MAX_BENTOBOX_AMOUNT_INCREASE_IN_BIPS = 1000;
-const MAX_BENTOBOX_CHANGE_AMOUNT_IN_BIPS = 1000;
+const MAX_BENTOBOX_AMOUNT_INCREASE_IN_BIPS = 1000n;
+const MAX_BENTOBOX_CHANGE_AMOUNT_IN_BIPS = 1000n;
 
 const GELATO_PROXY = "0x4D0c7842cD6a04f8EDB39883Db7817160DA159C3";
 
-const HARVESTER_ABI = [
+const HARVESTER_ABI = parseAbi([
 	"function run(address,address,uint256,uint256,bytes,uint256,uint256) external payable",
 	"function callbackGasLimit() external view returns (uint256)",
-];
+]);
 
-const MULTI_STAKING_ABI = [
+const MULTI_STAKING_ABI = parseAbi([
 	"function earned(address,address) external view returns (uint256)",
 	"function rewards(address,address) external view returns (uint256)",
-];
+]);
 
-const ERC20_ABI = [
+const ERC20_ABI = parseAbi([
 	"function balanceOf(address) external view returns (uint256)",
-];
+]);
 
-const BIPS = 10_000;
+const BIPS = 10_000n;
 
 type GmUserArgs = {
-	execAddress: Hex;
+	execAddress: Address;
 	zeroExApiEndpoint: string;
 	gmApiEndpoint: string;
 	maxSwapSlippageBips: number;
 	maxDepositSlippageBips: number;
-	rewardToken: Hex;
-	marketInputToken: Hex;
-	dataStoreAddress: Hex;
-	gmReaderAddress: Hex;
-	stakingAddress: Hex;
-	strategyToken: Hex;
+	rewardToken: Address;
+	marketInputToken: Address;
+	dataStoreAddress: Address;
+	gmReaderAddress: Address;
+	stakingAddress: Address;
+	strategyToken: Address;
 };
 
 Web3Function.onRun(async (context: Web3FunctionContext) => {
@@ -70,43 +70,50 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
 			stakingAddress,
 			strategyToken,
 		} = userArgs as GmUserArgs;
-		const provider = multiChainProvider.default();
 
-		const strategyContract = new Contract(execAddress, HARVESTER_ABI, provider);
-		const rewardTokenContract = new Contract(rewardToken, ERC20_ABI, provider);
-		const stakingContract = new Contract(
-			stakingAddress,
-			MULTI_STAKING_ABI,
-			provider,
-		);
+		const client = createJsonRpcPublicClient(multiChainProvider.default());
 
-		const [balance, earned, rewards, callbackGasLimit] = (await Promise.all([
-			rewardTokenContract.balanceOf(execAddress),
-			stakingContract.earned(execAddress, rewardToken),
-			stakingContract.rewards(execAddress, rewardToken),
-			strategyContract.callbackGasLimit(),
-		])) as [BigNumber, BigNumber, BigNumber, BigNumber];
-		const pendingRewardTokens = balance.add(earned).sub(rewards);
-		if (pendingRewardTokens.isZero()) {
+		const [balance, earned, rewards, callbackGasLimit] = await Promise.all([
+			client.readContract({
+				abi: ERC20_ABI,
+				address: rewardToken,
+				functionName: "balanceOf",
+				args: [execAddress],
+			}),
+			client.readContract({
+				abi: MULTI_STAKING_ABI,
+				address: stakingAddress,
+				functionName: "earned",
+				args: [execAddress, rewardToken],
+			}),
+			client.readContract({
+				abi: MULTI_STAKING_ABI,
+				address: stakingAddress,
+				functionName: "rewards",
+				args: [execAddress, rewardToken],
+			}),
+			client.readContract({
+				abi: HARVESTER_ABI,
+				address: execAddress,
+				functionName: "callbackGasLimit",
+			}),
+		]);
+		const pendingRewardTokens = balance + earned - rewards;
+		if (pendingRewardTokens === 0n) {
 			return { canExec: false, message: "No rewards to harvest" };
 		}
 
 		const depositRewardToken =
 			rewardToken.toLowerCase() === marketInputToken.toLowerCase();
 
-		let depositAmountIn: BigNumber;
-		let swapData: Hex;
+		let depositAmountIn: bigint;
+		let swapData: Address;
 		if (depositRewardToken) {
 			// Already market market input token --- deposit pending rewards
 			depositAmountIn = pendingRewardTokens;
 			swapData = "0x";
 		} else {
 			// Swap to market input token and deposit output
-			const marketInputTokenContract = new Contract(
-				marketInputToken,
-				ERC20_ABI,
-				provider,
-			);
 			const [quote, marketInputTokenBalance] = await Promise.all([
 				context.secrets.get("ZEROX_API_KEY").then((apiKey) => {
 					if (apiKey === undefined) {
@@ -118,65 +125,67 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
 						buyToken: marketInputToken,
 						sellToken: rewardToken,
 						sellAmount: pendingRewardTokens,
-						slippagePercentage: maxSwapSlippageBips / BIPS,
+						slippagePercentage: maxSwapSlippageBips / Number(BIPS),
 					});
 				}),
-				marketInputTokenContract.balanceOf(execAddress) as Promise<BigNumber>,
+				client.readContract({
+					abi: ERC20_ABI,
+					address: marketInputToken,
+					functionName: "balanceOf",
+					args: [execAddress],
+				}),
 			]);
 
-			const minimumBuyAmount = BigNumber.from(quote.buyAmount)
-				.mul(BIPS - maxSwapSlippageBips)
-				.div(BIPS);
+			const minimumBuyAmount =
+				(BigInt(quote.buyAmount) * (BIPS - BigInt(maxSwapSlippageBips))) / BIPS;
 
-			depositAmountIn = minimumBuyAmount.add(marketInputTokenBalance);
+			depositAmountIn = minimumBuyAmount + marketInputTokenBalance;
 			swapData = quote.data;
 		}
 
 		const [depositAmountOut, executionFee] = await Promise.all([
 			getDepositAmountOut({
-				longTokenAmount: depositRewardToken
-					? depositAmountIn
-					: BigNumber.from(0),
-				shortTokenAmount: depositRewardToken
-					? BigNumber.from(0)
-					: depositAmountIn,
+				longTokenAmount: depositRewardToken ? depositAmountIn : 0n,
+				shortTokenAmount: depositRewardToken ? 0n : depositAmountIn,
 				endpoint: gmApiEndpoint,
-				provider,
+				client,
 				readerAddress: gmReaderAddress,
 				marketAddress: strategyToken,
 				dataStoreAddress,
 			}),
 			Promise.all([
-				getDepositSingleTokenGasLimit({ provider, dataStoreAddress }),
-				getSingleSwapGasLimit({ provider, dataStoreAddress }),
-				provider.getGasPrice(),
+				getDepositSingleTokenGasLimit({ client, dataStoreAddress }),
+				getSingleSwapGasLimit({ client, dataStoreAddress }),
+				client.getGasPrice(),
 			]).then(([depositSingleTokenGasLimit, singleSwapGasLimit, gasPrice]) =>
 				getExecutionFee({
-					provider,
+					client,
 					dataStoreAddress,
-					gasLimit: BigNumber.from(callbackGasLimit)
-						.add(depositSingleTokenGasLimit)
-						.add(singleSwapGasLimit),
+					gasLimit:
+						callbackGasLimit + depositSingleTokenGasLimit + singleSwapGasLimit,
 					gasPrice,
 				}),
 			),
 		]);
 
-		const mimimumDepositAmountOut = depositAmountOut
-			.mul(BIPS - maxDepositSlippageBips)
-			.div(BIPS);
+		const mimimumDepositAmountOut =
+			(depositAmountOut * (BIPS - BigInt(maxDepositSlippageBips))) / BIPS;
 
 		const callData: Web3FunctionResultCallData = {
 			to: execAddress,
-			data: strategyContract.interface.encodeFunctionData("run", [
-				rewardToken,
-				marketInputToken,
-				mimimumDepositAmountOut,
-				executionFee,
-				swapData,
-				MAX_BENTOBOX_AMOUNT_INCREASE_IN_BIPS,
-				MAX_BENTOBOX_CHANGE_AMOUNT_IN_BIPS,
-			]),
+			data: encodeFunctionData({
+				abi: HARVESTER_ABI,
+				functionName: "run",
+				args: [
+					rewardToken,
+					marketInputToken,
+					mimimumDepositAmountOut,
+					executionFee,
+					swapData,
+					MAX_BENTOBOX_AMOUNT_INCREASE_IN_BIPS,
+					MAX_BENTOBOX_CHANGE_AMOUNT_IN_BIPS,
+				],
+			}),
 			value: executionFee.toString(),
 		};
 

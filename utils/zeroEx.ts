@@ -1,6 +1,5 @@
-import type { BigNumber } from "ethers";
 import ky from "ky";
-import type { Hex } from "./types";
+import type { Hex } from "viem";
 
 const ZEROX_API_KEY_HEADER_NAME = "0x-api-key";
 
@@ -9,7 +8,7 @@ export type QuoteParameters = {
 	apiKey: string;
 	buyToken: Hex;
 	sellToken: Hex;
-	sellAmount: BigNumber;
+	sellAmount: bigint;
 	slippagePercentage: number;
 };
 

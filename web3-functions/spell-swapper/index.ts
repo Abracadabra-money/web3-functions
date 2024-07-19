@@ -87,7 +87,7 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
 			apiKey,
 			buyToken: SPELL_ADDRESS,
 			sellToken: MIM_ADDRESS,
-			sellAmount,
+			sellAmount: BigInt(sellAmount.toString()),
 			slippagePercentage: maximumSwapSlippageBips / BIPS,
 		});
 	} catch (err) {
