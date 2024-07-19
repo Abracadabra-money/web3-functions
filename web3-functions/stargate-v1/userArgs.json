@@ -1,9 +1,9 @@
 {
-    "execAddress": "0x86130dac04869a8201c7077270c10f3afaba1c82",
-    "degenBoxAddress": "0xd96f48665a1410C0cd669A88898ecA36B9Fc2cce",
-    "lpAddress": "0x38EA452219524Bb87e18dE1C24D3bB59510BD783",
-    "stgAddress": "0xAf5191B0De278C7286d6C7CC6ab6BB8A73bA2Cd6",
-    "gelatoProxyAddress": "0x4D0c7842cD6a04f8EDB39883Db7817160DA159C3",
-    "intervalInSeconds": 86400,
-    "swapToLpSlippageBips": 50
+	"execAddress": "0x86130dac04869a8201c7077270c10f3afaba1c82",
+	"degenBoxAddress": "0xd96f48665a1410C0cd669A88898ecA36B9Fc2cce",
+	"lpAddress": "0x38EA452219524Bb87e18dE1C24D3bB59510BD783",
+	"stgAddress": "0xAf5191B0De278C7286d6C7CC6ab6BB8A73bA2Cd6",
+	"gelatoProxyAddress": "0x4D0c7842cD6a04f8EDB39883Db7817160DA159C3",
+	"intervalInSeconds": 86400,
+	"swapToLpSlippageBips": 50
 }

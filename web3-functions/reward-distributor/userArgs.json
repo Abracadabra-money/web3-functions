@@ -1,0 +1,9 @@
+{
+	"multiRewardDistributorAddress": "0xbF5DC3f598AFA173135160CDFce6BFeE45c912eF",
+	"multiRewardStakingAddresses": [
+		"0x280c64c4C4869CF2A6762EaDD4701360C1B11F97",
+		"0xc30911b52b5752447aB08615973e434c801CD652"
+	],
+	"epochBasedDistributorAddress": "0x111AbF466654c166Ee4AC15d6A29a3e0625533db",
+	"epochBasedStakingAddresses": []
+}

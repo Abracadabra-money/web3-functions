@@ -1,10 +1,10 @@
 {
-    "execAddress": "0x05b3b96dF07B4630373aE7506e51777b547335b0",
-    "lensAddress": "0x1589dEFC3Abb8ac5D0e86c19Fb940874Ea788c69",
-    "rewardToken": "0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7",
-    "rewardTokenChainlinkAddress": "0x0A77230d17318075983913bC2145DB16C7366156",
-    "magicGlpOracleAddress": "0x3Cc89EA432c36c8F96731765997722192202459D",
-    "maxApyInBips": 10000,
-    "mintGlpSlippageInBips": 100,
-    "intervalInSeconds": 604800
+	"execAddress": "0x05b3b96dF07B4630373aE7506e51777b547335b0",
+	"lensAddress": "0x1589dEFC3Abb8ac5D0e86c19Fb940874Ea788c69",
+	"rewardToken": "0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7",
+	"rewardTokenChainlinkAddress": "0x0A77230d17318075983913bC2145DB16C7366156",
+	"magicGlpOracleAddress": "0x3Cc89EA432c36c8F96731765997722192202459D",
+	"maxApyInBips": 10000,
+	"mintGlpSlippageInBips": 100,
+	"intervalInSeconds": 604800
 }

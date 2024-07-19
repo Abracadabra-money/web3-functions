@@ -1,19 +1,19 @@
 {
-  "web3FunctionVersion": "2.0.0",
-  "runtime": "js-1.0",
-  "memory": 128,
-  "timeout": 30,
-  "userArgs": {
-      "execAddress": "string",
-      "zeroExApiEndpoint": "string",
-      "gmApiEndpoint": "string",
-      "maxSwapSlippageBips": "number",
-      "maxDepositSlippageBips": "number",
-      "rewardToken": "string",
-      "marketInputToken": "string",
-      "dataStoreAddress": "string",
-      "gmReaderAddress": "string",
-      "stakingAddress": "string",
-      "strategyToken": "string"
-  }
+	"web3FunctionVersion": "2.0.0",
+	"runtime": "js-1.0",
+	"memory": 128,
+	"timeout": 30,
+	"userArgs": {
+		"execAddress": "string",
+		"zeroExApiEndpoint": "string",
+		"gmApiEndpoint": "string",
+		"maxSwapSlippageBips": "number",
+		"maxDepositSlippageBips": "number",
+		"rewardToken": "string",
+		"marketInputToken": "string",
+		"dataStoreAddress": "string",
+		"gmReaderAddress": "string",
+		"stakingAddress": "string",
+		"strategyToken": "string"
+	}
 }

@@ -1,6 +1,6 @@
 {
-  "treasuryPercentage": 50,
-  "distributionMinMIMAmount": "100000000000000000000",
-  "bridgingMinMIMAmount": "50000000000000000000",
-  "intervalInSeconds": 86400
+	"treasuryPercentage": 50,
+	"distributionMinMIMAmount": "100000000000000000000",
+	"bridgingMinMIMAmount": "50000000000000000000",
+	"intervalInSeconds": 86400
 }

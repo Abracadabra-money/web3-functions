@@ -1,16 +1,16 @@
 {
-  "web3FunctionVersion": "2.0.0",
-  "runtime": "js-1.0",
-  "memory": 128,
-  "timeout": 30,
-  "userArgs": {
-    "execAddress": "string",
-    "lensAddress": "string",
-    "rewardToken": "string",
-    "rewardTokenChainlinkAddress": "string",
-    "magicGlpOracleAddress": "string",
-    "maxApyInBips": "number",
-    "mintGlpSlippageInBips": "number",
-    "intervalInSeconds": "number"
-  }
+	"web3FunctionVersion": "2.0.0",
+	"runtime": "js-1.0",
+	"memory": 128,
+	"timeout": 30,
+	"userArgs": {
+		"execAddress": "string",
+		"lensAddress": "string",
+		"rewardToken": "string",
+		"rewardTokenChainlinkAddress": "string",
+		"magicGlpOracleAddress": "string",
+		"maxApyInBips": "number",
+		"mintGlpSlippageInBips": "number",
+		"intervalInSeconds": "number"
+	}
 }
