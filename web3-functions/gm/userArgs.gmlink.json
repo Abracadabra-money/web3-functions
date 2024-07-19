@@ -1,13 +1,13 @@
 {
-    "execAddress": "0x25aC30195F5b7653DdD7eb93Cae6ff5D924cDAF4",
-    "zeroExApiEndpoint": "https://arbitrum.api.0x.org/",
-    "gmApiEndpoint": "https://arbitrum-api.gmxinfra.io/",
-    "maxSwapSlippageBips": 100,
-    "maxDepositSlippageBips": 50,
-    "rewardToken": "0x912CE59144191C1204E64559FE8253a0e49E6548",
-    "marketInputToken": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
-    "dataStoreAddress": "0xFD70de6b91282D8017aA4E741e9Ae325CAb992d8",
-    "gmReaderAddress": "0xf60becbba223EEA9495Da3f606753867eC10d139",
-    "stakingAddress": "0x5b51f27c279aEecc8352688B69d55B533417e263",
-    "strategyToken": "0x7f1fa204bb700853D36994DA19F830b6Ad18455C"
+	"execAddress": "0x25aC30195F5b7653DdD7eb93Cae6ff5D924cDAF4",
+	"zeroExApiEndpoint": "https://arbitrum.api.0x.org/",
+	"gmApiEndpoint": "https://arbitrum-api.gmxinfra.io/",
+	"maxSwapSlippageBips": 100,
+	"maxDepositSlippageBips": 50,
+	"rewardToken": "0x912CE59144191C1204E64559FE8253a0e49E6548",
+	"marketInputToken": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+	"dataStoreAddress": "0xFD70de6b91282D8017aA4E741e9Ae325CAb992d8",
+	"gmReaderAddress": "0xf60becbba223EEA9495Da3f606753867eC10d139",
+	"stakingAddress": "0x5b51f27c279aEecc8352688B69d55B533417e263",
+	"strategyToken": "0x7f1fa204bb700853D36994DA19F830b6Ad18455C"
 }

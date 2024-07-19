@@ -1,9 +1,9 @@
 {
-    "execAddress": "0xd15f851A912e4Fa9947e6024f16f02Ef25Ff311B",
-    "vaultAddress": "0x729D8855a1D21aB5F84dB80e00759E7149936e30",
-    "swapRewardToTokenAddress": "0x919c1c267bc06a7039e03fcc2ef738525769109c",
-    "curveLensAddress": "0x5552b631e2ad801faa129aacf4b701071cc9d1f7",
-    "minRequiredLpAmount": "1000000000000000",
-    "intervalInSeconds": 86400,
-    "swapRewardsSlippageBips": 50
+	"execAddress": "0xd15f851A912e4Fa9947e6024f16f02Ef25Ff311B",
+	"vaultAddress": "0x729D8855a1D21aB5F84dB80e00759E7149936e30",
+	"swapRewardToTokenAddress": "0x919c1c267bc06a7039e03fcc2ef738525769109c",
+	"curveLensAddress": "0x5552b631e2ad801faa129aacf4b701071cc9d1f7",
+	"minRequiredLpAmount": "1000000000000000",
+	"intervalInSeconds": 86400,
+	"swapRewardsSlippageBips": 50
 }

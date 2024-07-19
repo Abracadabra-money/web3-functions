@@ -1,5 +1,5 @@
 {
-    "vaultOracle": "0xDd45c6614305D705a444B3baB0405D68aC85DbA5",
-    "maxApyInBips": 5000,
-    "intervalInSeconds": 3600
+	"vaultOracle": "0xDd45c6614305D705a444B3baB0405D68aC85DbA5",
+	"maxApyInBips": 5000,
+	"intervalInSeconds": 3600
 }

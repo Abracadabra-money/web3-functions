@@ -1,20 +1,20 @@
 {
-  "web3FunctionVersion": "2.0.0",
-  "runtime": "js-1.0",
-  "memory": 128,
-  "timeout": 30,
-  "userArgs": {
-    "execAddress": "string",
-    "intervalInSeconds": "number",
-    "strategy": "string",
-    "strategyLens": "string",
-    "wrapper": "string",
-    "pair": "string",
-    "router": "string",
-    "factory": "string",
-    "wrapperRewardQuoteSlippageBips": "number",
-    "strategyRewardQuoteSlippageBips": "number",
-    "maxBentoBoxAmountIncreaseInBips": "number",
-    "maxBentoBoxChangeAmountInBips": "number"
-  }
+	"web3FunctionVersion": "2.0.0",
+	"runtime": "js-1.0",
+	"memory": 128,
+	"timeout": 30,
+	"userArgs": {
+		"execAddress": "string",
+		"intervalInSeconds": "number",
+		"strategy": "string",
+		"strategyLens": "string",
+		"wrapper": "string",
+		"pair": "string",
+		"router": "string",
+		"factory": "string",
+		"wrapperRewardQuoteSlippageBips": "number",
+		"strategyRewardQuoteSlippageBips": "number",
+		"maxBentoBoxAmountIncreaseInBips": "number",
+		"maxBentoBoxChangeAmountInBips": "number"
+	}
 }
