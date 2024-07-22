@@ -5,6 +5,7 @@ import {
 	type Web3FunctionUserArgs,
 } from "@gelatonetwork/automate-sdk";
 import hre from "hardhat";
+import { DEVOPS_SAFE } from "../utils/constants";
 
 const { ethers, w3f } = hre;
 
@@ -102,15 +103,10 @@ const main = async () => {
 	] satisfies Partial<CreateBatchExecTaskOptions>[];
 
 	for (const config of configs) {
-		const task = await automate.prepareBatchExecTask(
-			config,
-			{},
-			"0x48c18844530c96AaCf24568fa7F912846aAc12B9",
-		);
+		const { tx } = await automate.prepareBatchExecTask(config, {}, DEVOPS_SAFE);
 		console.log(config.name);
-		console.log(`to: ${task.tx.to}`);
-		const data = task.tx.data;
-		console.log(data);
+		console.log(`to: ${tx.to}`);
+		console.log(tx.data);
 		console.log("------------------");
 		console.log();
 	}

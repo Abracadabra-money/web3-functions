@@ -6,7 +6,7 @@ import type { StaticJsonRpcProvider } from "@ethersproject/providers";
 import {
 	Web3Function,
 	type Web3FunctionContext,
-	type Web3FunctionResult,
+	type Web3FunctionResultV2,
 } from "@gelatonetwork/web3-functions-sdk";
 import ky, { type KyInstance } from "ky";
 import { wrap } from "../../utils/crosschainMulticall";
@@ -76,21 +76,25 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
 				provider,
 				targetChainProvider,
 				LZ_CHAIN_IDS[targetChainId],
-				result,
+				result.callData,
 			);
 		}
 		await storage.set("lastTimestamp", timestamp.toString());
 
-		console.log(
-			`cast send --private-key=$PRIVATE_KEY --rpc-url=https://kava-mainnet-archival.gateway.pokt.network/v1/lb/3b9d1dd7 --legacy ${result.callData[0].to} ${result.callData[0].data}`,
-		);
+		if (result.canExec) {
+			console.log(
+				`cast send --private-key=$PRIVATE_KEY --rpc-url=https://kava-mainnet-archival.gateway.pokt.network/v1/lb/3b9d1dd7 --legacy ${result.callData[0].to} ${result.callData[0].data}`,
+			);
+		}
 	}
 
-	SimulationUrlBuilder.log2(
-		gelatoProxyAddress,
-		gelatoArgs.chainId,
-		result.callData,
-	);
+	if (result.canExec) {
+		SimulationUrlBuilder.log2(
+			gelatoProxyAddress,
+			gelatoArgs.chainId,
+			result.callData,
+		);
+	}
 
 	return result;
 });
@@ -100,7 +104,7 @@ const run = async (
 	chainId: number,
 	provider: StaticJsonRpcProvider,
 	context: Web3FunctionContext,
-): Promise<Web3FunctionResult> => {
+): Promise<Web3FunctionResultV2> => {
 	const { userArgs } = context;
 	const execAddress = userArgs.execAddress as string;
 	const degenBoxAddress = userArgs.degenBoxAddress as string;

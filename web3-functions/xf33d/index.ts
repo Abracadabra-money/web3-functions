@@ -6,8 +6,6 @@ import { BigNumber, Contract } from "ethers";
 import { Interface } from "ethers/lib/utils";
 import { SimulationUrlBuilder } from "../../utils/tenderly";
 
-const BIPS = 10_000;
-
 // using create3, same address on all chains
 const XF33D_ORACLE_ADDRESS = "0x518d6B079884Ca6Ff12c398F68Ac31516813b1A5";
 const GELATO_PROXY = "0x4D0c7842cD6a04f8EDB39883Db7817160DA159C3";

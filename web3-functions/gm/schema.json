@@ -4,16 +4,13 @@
 	"memory": 128,
 	"timeout": 30,
 	"userArgs": {
-		"execAddress": "string",
+		"execAddresses": "string[]",
 		"zeroExApiEndpoint": "string",
 		"gmApiEndpoint": "string",
 		"maxSwapSlippageBips": "number",
 		"maxDepositSlippageBips": "number",
 		"rewardToken": "string",
-		"marketInputToken": "string",
 		"dataStoreAddress": "string",
-		"gmReaderAddress": "string",
-		"stakingAddress": "string",
-		"strategyToken": "string"
+		"gmReaderAddress": "string"
 	}
 }

@@ -4,6 +4,7 @@ import {
 	TriggerType,
 } from "@gelatonetwork/automate-sdk";
 import hre from "hardhat";
+import { DEVOPS_SAFE } from "../utils/constants";
 
 const { ethers, w3f } = hre;
 
@@ -55,13 +56,13 @@ const main = async () => {
 
 	for (const deployment of deployments) {
 		console.log(`Preparing ${deployment.name}...`);
-		const task = await automate.prepareBatchExecTask(
+		const { tx } = await automate.prepareBatchExecTask(
 			deployment,
 			{},
-			"0x48c18844530c96AaCf24568fa7F912846aAc12B9",
+			DEVOPS_SAFE,
 		);
-		console.log(`to: ${task.tx.to}`);
-		console.log(task.tx.data);
+		console.log(`to: ${tx.to}`);
+		console.log(tx.data);
 		console.log("------------------");
 		console.log();
 	}

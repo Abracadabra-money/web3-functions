@@ -1,5 +1,8 @@
-import { AutomateSDK } from "@gelatonetwork/automate-sdk";
+import { AutomateSDK, TriggerType } from "@gelatonetwork/automate-sdk";
 import hre from "hardhat";
+import { DEVOPS_SAFE } from "../utils/constants";
+
+const ONE_MINUTE_MILLIS = 60 * 1000;
 
 const { ethers, w3f } = hre;
 
@@ -18,30 +21,34 @@ const main = async () => {
 
 	{
 		console.log("Creating Task");
-		const task = await automate.createBatchExecTask({
-			name: "Velodrome vOP/USDC",
-			web3FunctionHash: cid,
-			web3FunctionArgs: {
-				execAddress: "0x7E05363E225c1c8096b1cd233B59457104B84908",
-				intervalInSeconds: 604800,
-				strategy: "0xa3372cd2178c52fdcb1f6e4c4e93014b4db3b20d",
-				strategyLens: "0x8BEE5Db2315Df7868295c531B36BaA53439cf528",
-				wrapper: "0x6eb1709e0b562097bf1cc48bc6a378446c297c04",
-				pair: "0x47029bc8f5cbe3b464004e87ef9c9419a48018cd",
-				router: "0xa132DAB612dB5cB9fC9Ac426A0Cc215A3423F9c9",
-				factory: "0x25CbdDb98b35ab1FF77413456B31EC81A6B6B746",
-				wrapperRewardQuoteSlippageBips: 100,
-				strategyRewardQuoteSlippageBips: 100,
-				maxBentoBoxAmountIncreaseInBips: 1,
-				maxBentoBoxChangeAmountInBips: 1000,
+		const { tx } = await automate.prepareBatchExecTask(
+			{
+				name: "Velodrome vOP/USDC",
+				web3FunctionHash: cid,
+				trigger: {
+					type: TriggerType.TIME,
+					interval: ONE_MINUTE_MILLIS,
+				},
+				web3FunctionArgs: {
+					execAddress: "0x7E05363E225c1c8096b1cd233B59457104B84908",
+					intervalInSeconds: 604800,
+					strategy: "0xa3372cd2178c52fdcb1f6e4c4e93014b4db3b20d",
+					strategyLens: "0x8BEE5Db2315Df7868295c531B36BaA53439cf528",
+					wrapper: "0x6eb1709e0b562097bf1cc48bc6a378446c297c04",
+					pair: "0x47029bc8f5cbe3b464004e87ef9c9419a48018cd",
+					router: "0xa132DAB612dB5cB9fC9Ac426A0Cc215A3423F9c9",
+					factory: "0x25CbdDb98b35ab1FF77413456B31EC81A6B6B746",
+					wrapperRewardQuoteSlippageBips: 100,
+					strategyRewardQuoteSlippageBips: 100,
+					maxBentoBoxAmountIncreaseInBips: 1,
+					maxBentoBoxChangeAmountInBips: 1000,
+				},
 			},
-		});
-		console.log(`to: ${task.tx.to}`);
-		const data = task.tx.data.replace(
-			"9a688cc56f5f4fc75eaf8fdf18f43260ae43647c",
-			"4D0c7842cD6a04f8EDB39883Db7817160DA159C3",
+			{},
+			DEVOPS_SAFE,
 		);
-		console.log(data);
+		console.log(`to: ${tx.to}`);
+		console.log(tx.data);
 		console.log("------------------");
 		console.log();
 	}

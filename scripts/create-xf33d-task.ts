@@ -1,5 +1,8 @@
-import { AutomateSDK } from "@gelatonetwork/automate-sdk";
+import { AutomateSDK, TriggerType } from "@gelatonetwork/automate-sdk";
 import hre from "hardhat";
+import { DEVOPS_SAFE } from "../utils/constants";
+
+const ONE_MINUTE_MILLIS = 60 * 1000;
 
 const { ethers, w3f } = hre;
 
@@ -18,20 +21,24 @@ const main = async () => {
 
 	{
 		console.log("Creating Arbitrum USDT -> KAVA Task");
-		const task = await automate.createBatchExecTask({
-			name: "",
-			web3FunctionHash: cid,
-			web3FunctionArgs: {
-				destinationChain: 177,
-				chainlinkOracle: "0x3f3f5dF88dC9F13eac63DF89EC16ef6e7E25DdE7",
+		const { tx } = await automate.prepareBatchExecTask(
+			{
+				name: "",
+				web3FunctionHash: cid,
+				trigger: {
+					type: TriggerType.TIME,
+					interval: ONE_MINUTE_MILLIS,
+				},
+				web3FunctionArgs: {
+					destinationChain: 177,
+					chainlinkOracle: "0x3f3f5dF88dC9F13eac63DF89EC16ef6e7E25DdE7",
+				},
 			},
-		});
-		console.log(`to: ${task.tx.to}`);
-		const data = task.tx.data.replace(
-			"9a688cc56f5f4fc75eaf8fdf18f43260ae43647c",
-			"4D0c7842cD6a04f8EDB39883Db7817160DA159C3",
+			{},
+			DEVOPS_SAFE,
 		);
-		console.log(data);
+		console.log(`to: ${tx.to}`);
+		console.log(tx.data);
 		console.log("------------------");
 		console.log();
 	}

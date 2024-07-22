@@ -1,8 +1,8 @@
 import { Interface } from "@ethersproject/abi";
 import type { StaticJsonRpcProvider } from "@ethersproject/providers";
 import type {
-	Web3FunctionResult,
 	Web3FunctionResultCallData,
+	Web3FunctionResultV2,
 } from "@gelatonetwork/web3-functions-sdk";
 import { Contract, ethers } from "ethers";
 import endpointAbi from "./endpointAbi";
@@ -17,26 +17,24 @@ export const wrap = async (
 	localProvider: StaticJsonRpcProvider,
 	remoteProvider: StaticJsonRpcProvider,
 	lzChainId: number,
-	web3FunctionResult: Web3FunctionResult,
-): Promise<Web3FunctionResult> => {
-	const calls = web3FunctionResult.callData.map(
-		(callData: Web3FunctionResultCallData) => ({
-			to: callData.to,
-			value: callData.value || "0",
-			data: callData.data,
-		}),
-	);
+	callData: Web3FunctionResultCallData[],
+): Promise<Web3FunctionResultV2> => {
+	const calls = callData.map((callData: Web3FunctionResultCallData) => ({
+		to: callData.to,
+		value: callData.value || "0",
+		data: callData.data,
+	}));
 
 	const payload = ethers.utils.defaultAbiCoder.encode(
 		[
-			{
+			ethers.utils.ParamType.fromObject({
 				type: "tuple[]",
 				components: [
 					{ name: "to", type: "address" },
 					{ name: "value", type: "uint256" },
 					{ name: "data", type: "bytes" },
 				],
-			},
+			}),
 		],
 		[calls],
 	);
@@ -77,7 +75,7 @@ export const wrap = async (
 	)[0];
 
 	return {
-		canExec: web3FunctionResult.canExec,
+		canExec: true,
 		callData: [
 			{
 				to: LZ_MULTICALL_SENDER_RECEIVER_ADDRESS,
