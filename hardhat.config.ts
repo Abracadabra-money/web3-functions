@@ -3,11 +3,7 @@ import "@gelatonetwork/web3-functions-sdk/hardhat-plugin";
 import "@nomiclabs/hardhat-ethers";
 import "@foundry-rs/hardhat-anvil";
 
-// Process Env Variables
-import * as dotenv from "dotenv";
-dotenv.config({ path: `${__dirname}/.env` });
-
-const PRIVATE_KEY = false; //process.env.PRIVATE_KEY;
+const PRIVATE_KEY = process.env.PRIVATE_KEY;
 
 const config = {
 	w3f: {
