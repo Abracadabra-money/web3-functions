@@ -16,7 +16,8 @@ export function createJsonRpcPublicClient(
 			},
 		} as unknown as Chain,
 		transport: custom({
-			request: async ({ method, params }) => provider.send(method, params),
+			request: async ({ method, params }) =>
+				provider.send(method, params !== undefined ? params : []),
 		}),
 	}).extend(publicActions);
 }

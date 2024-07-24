@@ -36,7 +36,7 @@ const main = async () => {
 		maxSwapSlippageBips: 100,
 		maxDepositSlippageBips: 50,
 		dataStoreAddress: "0xFD70de6b91282D8017aA4E741e9Ae325CAb992d8",
-		gmReaderAddress: "0xf60becbba223EEA9495Da3f606753867eC10d139",
+		gmReaderAddress: "0x5Ca84c34a381434786738735265b9f3FD814b824",
 	} satisfies Partial<Web3FunctionUserArgs>;
 	const configs = [
 		{
@@ -44,7 +44,7 @@ const main = async () => {
 			name: "gmARB",
 			web3FunctionArgs: {
 				...commonWeb3FunctionArgs,
-				execAddress: "0x39c54BD10261D42EE1838D5Fc71DD307Dcb39001",
+				execAddress: "0x892dDc36214fB833E702f53B612e2608E14EE27C",
 				rewardToken: "0x912CE59144191C1204E64559FE8253a0e49E6548",
 				marketInputToken: "0x912CE59144191C1204E64559FE8253a0e49E6548",
 				stakingAddress: "0xAF4FDCAa6d9D5Be4Acd8FCE02fA37f72b31a74cb",
@@ -56,7 +56,7 @@ const main = async () => {
 			name: "gmBTC",
 			web3FunctionArgs: {
 				...commonWeb3FunctionArgs,
-				execAddress: "0xb4fC7be1FC0a6d7b6D5d509C622F56d719Cd1373",
+				execAddress: "0x0D609C455f3bBD9971e37aDF41cDb342C32Ac801",
 				rewardToken: "0x912CE59144191C1204E64559FE8253a0e49E6548",
 				marketInputToken: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
 				stakingAddress: "0xeB0DeaB1099DD5A7d499b89a6f47cEF8F08c5680",
@@ -68,7 +68,7 @@ const main = async () => {
 			name: "gmETH",
 			web3FunctionArgs: {
 				...commonWeb3FunctionArgs,
-				execAddress: "0xf53a003e863BA83424048d729460fba056c06b80",
+				execAddress: "0x60a816a7a5387D59D073d9d7441E03A278cFad30",
 				rewardToken: "0x912CE59144191C1204E64559FE8253a0e49E6548",
 				marketInputToken: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
 				stakingAddress: "0xa7940dcB17214faBCE26E146613804308C01c295",
@@ -80,7 +80,7 @@ const main = async () => {
 			name: "gmLINK",
 			web3FunctionArgs: {
 				...commonWeb3FunctionArgs,
-				execAddress: "0x25aC30195F5b7653DdD7eb93Cae6ff5D924cDAF4",
+				execAddress: "0x3142aB041cF9Db9b1b22D9f55716e83B1eA178f1",
 				rewardToken: "0x912CE59144191C1204E64559FE8253a0e49E6548",
 				marketInputToken: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
 				stakingAddress: "0x5b51f27c279aEecc8352688B69d55B533417e263",
@@ -92,7 +92,7 @@ const main = async () => {
 			name: "gmSOL",
 			web3FunctionArgs: {
 				...commonWeb3FunctionArgs,
-				execAddress: "0x9F026f9edc92150076bB8A0aC44c14A8412C1639",
+				execAddress: "0x19366CAf3991EBB48566ccde140eeeb3D514D9e5",
 				rewardToken: "0x912CE59144191C1204E64559FE8253a0e49E6548",
 				marketInputToken: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
 				stakingAddress: "0x18F7cCa3D98aD96cf26DBDA1Db3Fd71e30D32d31",
