@@ -1,5 +1,8 @@
-import { AutomateSDK } from "@gelatonetwork/automate-sdk";
+import { AutomateSDK, TriggerType } from "@gelatonetwork/automate-sdk";
 import hre from "hardhat";
+import { DEVOPS_SAFE } from "../utils/constants";
+
+const TEN_MINUTES_MILLIS = 10 * 60 * 1000;
 
 const { ethers, w3f } = hre;
 
@@ -18,25 +21,30 @@ const main = async () => {
 
 	{
 		console.log("Creating Kava MagicCurveLP MIM/USDT Task");
-		const task = await automate.createBatchExecTask({
-			name: "",
-			web3FunctionHash: cid,
-			web3FunctionArgs: {
-				execAddress: "",
-				vaultAddress: "",
-				swapRewardToTokenAddress: "0x919c1c267bc06a7039e03fcc2ef738525769109c", // USDT
-				curveLensAddress: "0x5552b631e2ad801faa129aacf4b701071cc9d1f7",
-				minRequiredLpAmount: "100000000000000000000", // 100 lp min
-				intervalInSeconds: 86400,
-				swapRewardsSlippageBips: 100, // wKAVA -> USDT 1% slippage
+		const { tx } = await automate.prepareBatchExecTask(
+			{
+				name: "",
+				web3FunctionHash: cid,
+				trigger: {
+					type: TriggerType.TIME,
+					interval: TEN_MINUTES_MILLIS,
+				},
+				web3FunctionArgs: {
+					execAddress: "",
+					vaultAddress: "",
+					swapRewardToTokenAddress:
+						"0x919c1c267bc06a7039e03fcc2ef738525769109c", // USDT
+					curveLensAddress: "0x5552b631e2ad801faa129aacf4b701071cc9d1f7",
+					minRequiredLpAmount: "100000000000000000000", // 100 lp min
+					intervalInSeconds: 86400,
+					swapRewardsSlippageBips: 100, // wKAVA -> USDT 1% slippage
+				},
 			},
-		});
-		console.log(`to: ${task.tx.to}`);
-		const data = task.tx.data.replace(
-			"9a688cc56f5f4fc75eaf8fdf18f43260ae43647c",
-			"4D0c7842cD6a04f8EDB39883Db7817160DA159C3",
+			{},
+			DEVOPS_SAFE,
 		);
-		console.log(data);
+		console.log(`to: ${tx.to}`);
+		console.log(tx.data);
 		console.log("------------------");
 		console.log();
 	}

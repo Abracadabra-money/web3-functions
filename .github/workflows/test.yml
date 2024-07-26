@@ -7,6 +7,7 @@ env:
   ARBITRUM_PROVIDER_URL: https://1rpc.io/arb
   OPTIMISM_PROVIDER_URL: https://endpoints.omniatech.io/v1/op/mainnet/public
   MAINNET_PROVIDER_URL: https://eth.llamarpc.com
+  ARBITRUM_RPC_URL: ${{ secrets.ARBITRUM_RPC_URL }}
   ZEROX_API_KEY: ${{ secrets.ZEROX_API_KEY }}
   
 jobs:
@@ -14,7 +15,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: foundry-rs/foundry-toolchain@v1
       - uses: oven-sh/setup-bun@v2
-      - run: bun install
+      - run: bun install --frozen-lockfile
       - run: bun run lint:ci
-      - run: bun run test
+      - run: bun run typecheck
+      - run: bun test
+      - run: bun run run-task
