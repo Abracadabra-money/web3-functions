@@ -68,6 +68,10 @@ Web3Function.onRun(
 			const client = createJsonRpcPublicClient(multiChainProvider.default());
 
 			const zeroxApiKeyPromise = secrets.get("ZEROX_API_KEY");
+			const gasPricePromise = client.getGasPrice().then(
+				(gasPrice) => ({ success: true as const, gasPrice }),
+				(error) => ({ success: false as const, error }),
+			);
 
 			const callData = R.pipe(
 				await Promise.all(
@@ -199,7 +203,12 @@ Web3Function.onRun(
 									Promise.all([
 										getDepositSingleTokenGasLimit({ client, dataStoreAddress }),
 										getSingleSwapGasLimit({ client, dataStoreAddress }),
-										client.getGasPrice(),
+										gasPricePromise.then((result) => {
+											if (!result.success) {
+												throw result.error;
+											}
+											return result.gasPrice;
+										}),
 									]).then(
 										([
 											depositSingleTokenGasLimit,

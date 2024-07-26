@@ -17,5 +17,5 @@
 | Distributor Mainnet          | [task](https://app.gelato.network/functions/task/0x4db2dd79637c5942307ebce48b85fa921c9229d3627d8790c1ed4d0052cfb4d2:1)     |
 | Withdrawer Arbitrum          | [task](https://app.gelato.network/functions/task/0x1249301e1feb1610b5d9fdd84952e4bd9af1472689686b028590d4e119109fc0:42161) |
 | Stargate S\*USDT             | [task](https://app.gelato.network/functions/task/0x37ab785e9a1200fb8bac63b431e36da085b177841b24aa0dfab0a4981122da0a:1)     |
-| GM Strategy Harvester        | [task](https://app.gelato.network/functions/task/0x4548f2678aa4dd88806c5bca64af504ee2c328106c18228222e4cb3af9830836:42161) |
+| GM Strategy Harvester        | [task](https://app.gelato.network/functions/task/0x40d7aadde626b52e7df27bcab3f92c42faf3f137d50fc98dffc79d20c9119314:42161) |
 | Reward Distributor           | [task](https://app.gelato.network/functions/task/0x1b62e611e8e3d87ec8c7ced57230d341802c0ac6c611afb9a9fb4a3c53dc6ac1:42161) |
