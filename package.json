@@ -26,7 +26,7 @@
 		"create-task:velodrome-op-usdc": "hardhat run ./scripts/create-velodrome-op-usdc-task.ts --network anvil",
 		"create-task:magicape": "hardhat run ./scripts/create-magicape-task.ts --network anvil",
 		"create-task:xf33d": "hardhat run ./scripts/create-xf33d-task.ts --network anvil",
-		"run-task:spell-staking": "concurrently --kill-others-on-fail bun:run-task:spell-staking:*",
+		"run-task:spell-staking": "concurrently --kill-others-on-fail -m 1 bun:run-task:spell-staking:*",
 		"run-task:spell-staking:mainnet": "hardhat w3f-run spell-staking --logs --network ethereum",
 		"run-task:spell-staking:avalanche": "hardhat w3f-run spell-staking --logs --network avalanche",
 		"run-task:spell-staking:arbitrum": "hardhat w3f-run spell-staking --logs --network arbitrum",
