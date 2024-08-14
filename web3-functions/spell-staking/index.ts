@@ -3,6 +3,7 @@ import {
 	type Web3FunctionContext,
 } from "@gelatonetwork/web3-functions-sdk";
 import { BigNumber, Contract, utils } from "ethers";
+import { GELATO_PROXY } from "../../utils/constants";
 import { LZ_CHAIN_IDS } from "../../utils/lz";
 import { SimulationUrlBuilder } from "../../utils/tenderly";
 
@@ -38,8 +39,10 @@ const MSPELL_STAKING_ADDRESSES: { [chainId: number]: string } = {
 const MIM_ADDRESSES: { [chainId: number]: string } = {
 	1: "0x99D8a9C45b2ecA8864373A26D1459e3Dff1e17F3", // Ethereum
 	250: "0x82f0B8B456c1A451378467398982d4834b6829c1", // Fantom
+	2222: "0x471EE749bA270eb4c1165B5AD95E614947f6fCeb", // Kava
 	43114: "0x130966628846BFd36ff31a822705796e8cb8C18D", // Avalanche
 	42161: "0xFEa7a6a0B346362BF88A9e4A88416B77a57D6c2A", // Arbitrum
+	81457: "0x76DA31D7C9CbEAE102aff34D3398bC450c8374c1", // Blast
 };
 const SPELL_ADDRESSES: { [chainId: number]: string } = {
 	1: "0x090185f2135308BaD17527004364eBcC2D37e5F6", // Ethereum
@@ -48,8 +51,13 @@ const SPELL_ADDRESSES: { [chainId: number]: string } = {
 	42161: "0x3E6648C5a70A150A88bCE65F4aD4d506Fe15d2AF", // Arbitrum
 };
 
+const WITHDRAWER_ADDRESS_LEGACY =
+	"0x2C9f65BD1a501CB406584F5532cE57c28829B131" as const;
+const WITHDRAWER_ADDRESS_LATEST =
+	"0x22d0e6A4e9b658184248f5e0BF89A0D763849544" as const;
+
 const MAINNET_ADDRESSES = {
-	withdrawer: "0x2C9f65BD1a501CB406584F5532cE57c28829B131",
+	withdrawer: WITHDRAWER_ADDRESS_LEGACY,
 	distributor: "0x953DAb0e64828972853E7faA45634620A40Fa479",
 	sSpell: "0x26FA3fFFB6EfE8c1E69103aCb4044C26B9A106a9",
 	treasury: "0xDF2C270f610Dc35d8fFDA5B453E74db5471E126B",
@@ -80,12 +88,17 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
 	const WITHDRAWER_INTERFACE = new utils.Interface(WITHDRAWER_ABI);
 	const DISTRIBUTOR_INTERFACE = new utils.Interface(DISTRIBUTOR_ABI);
 
-	// same address on all chains
-	const WITHDRAWER_ADDRESS = "0x2C9f65BD1a501CB406584F5532cE57c28829B131";
+	const ALTCHAIN_IDS = [250, 2222, 43114, 42161, 81457] as const;
+	const CHAIN_IDS = [1, ...ALTCHAIN_IDS] as const;
 
-	// supported chains
-	const ALTCHAIN_IDS = [250, 43114, 42161];
-	const CHAIN_IDS = [1, ...ALTCHAIN_IDS];
+	const WITHDRAWER_ADDRESS = {
+		1: WITHDRAWER_ADDRESS_LEGACY,
+		250: WITHDRAWER_ADDRESS_LEGACY,
+		2222: WITHDRAWER_ADDRESS_LATEST,
+		42161: WITHDRAWER_ADDRESS_LEGACY,
+		43114: WITHDRAWER_ADDRESS_LEGACY,
+		81457: WITHDRAWER_ADDRESS_LATEST,
+	} as const satisfies Record<(typeof CHAIN_IDS)[number], string>;
 
 	/////////////////////////////////////////////////
 	// Initialization
@@ -93,7 +106,7 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
 	const info: {
 		[chainId: number]: {
 			withdrawer: Contract;
-			spell: Contract;
+			spell: Contract | undefined;
 			mSpellStakedAmount: BigNumber;
 			sSpellStakedAmount: BigNumber;
 		};
@@ -103,8 +116,15 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
 		const provider = multiChainProvider.chainId(chainId);
 
 		info[chainId] = {
-			withdrawer: new Contract(WITHDRAWER_ADDRESS, WITHDRAWER_ABI, provider),
-			spell: new Contract(SPELL_ADDRESSES[chainId], IERC20_ABI, provider),
+			withdrawer: new Contract(
+				WITHDRAWER_ADDRESS[chainId],
+				WITHDRAWER_ABI,
+				provider,
+			),
+			spell:
+				SPELL_ADDRESSES[chainId] !== undefined
+					? new Contract(SPELL_ADDRESSES[chainId], IERC20_ABI, provider)
+					: undefined,
 			mSpellStakedAmount: BigNumber.from(0),
 			sSpellStakedAmount: BigNumber.from(0),
 		};
@@ -158,24 +178,27 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
 		// Fetch staked amounts
 		await Promise.all(
 			CHAIN_IDS.map(async (chainId) => {
-				// mSPELL staked amount
-				info[chainId].mSpellStakedAmount = await info[chainId].spell.balanceOf(
-					MSPELL_STAKING_ADDRESSES[chainId],
-				);
+				const spellContract = info[chainId].spell;
+				if (spellContract !== undefined) {
+					// mSPELL staked amount
+					info[chainId].mSpellStakedAmount = await spellContract.balanceOf(
+						MSPELL_STAKING_ADDRESSES[chainId],
+					);
 
-				// sSPELL staked amount (mainnet only)
-				if (chainId === MAINNET_CHAIN_ID) {
-					info[chainId].sSpellStakedAmount = await info[
-						chainId
-					].spell.balanceOf(MAINNET_ADDRESSES.sSpell);
+					// sSPELL staked amount (mainnet only)
+					if (chainId === MAINNET_CHAIN_ID) {
+						info[chainId].sSpellStakedAmount = await spellContract.balanceOf(
+							MAINNET_ADDRESSES.sSpell,
+						);
+						totalSpellStaked = totalSpellStaked.add(
+							info[chainId].sSpellStakedAmount,
+						);
+					}
+
 					totalSpellStaked = totalSpellStaked.add(
-						info[chainId].sSpellStakedAmount,
+						info[chainId].mSpellStakedAmount,
 					);
 				}
-
-				totalSpellStaked = totalSpellStaked.add(
-					info[chainId].mSpellStakedAmount,
-				);
 			}),
 		);
 
@@ -223,30 +246,32 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
 			});
 
 			// AltChain allocations
-			for (const chainId in ALTCHAIN_IDS) {
-				const amountToBridge = mimBalanceInDistributor
-					.mul(info[ALTCHAIN_IDS[chainId]].mSpellStakedAmount)
-					.div(totalSpellStaked);
+			for (const chainId of ALTCHAIN_IDS) {
+				if (info[chainId].spell !== undefined) {
+					const amountToBridge = mimBalanceInDistributor
+						.mul(info[chainId].mSpellStakedAmount)
+						.div(totalSpellStaked);
 
-				// Estimate bridging fee
-				const { fee, gas } = await distributorMainnet.estimateBridgingFee(
-					amountToBridge.toString(),
-					LZ_CHAIN_IDS[ALTCHAIN_IDS[chainId]],
-					MSPELL_STAKING_ADDRESSES[ALTCHAIN_IDS[chainId]],
-				); // use default minDstGasLookup
+					// Estimate bridging fee
+					const { fee, gas } = await distributorMainnet.estimateBridgingFee(
+						amountToBridge.toString(),
+						LZ_CHAIN_IDS[chainId],
+						MSPELL_STAKING_ADDRESSES[chainId],
+					); // use default minDstGasLookup
 
-				distributions.push({
-					recipient: MSPELL_STAKING_ADDRESSES[ALTCHAIN_IDS[chainId]],
-					gas: gas.toString(),
-					lzChainId: LZ_CHAIN_IDS[ALTCHAIN_IDS[chainId]].toString(),
-					fee: fee.toString(),
-					amount: amountToBridge.toString(),
-				});
+					distributions.push({
+						recipient: MSPELL_STAKING_ADDRESSES[chainId],
+						gas: gas.toString(),
+						lzChainId: LZ_CHAIN_IDS[chainId].toString(),
+						fee: fee.toString(),
+						amount: amountToBridge.toString(),
+					});
+				}
 			}
 
 			// withdraw
 			callData.push({
-				to: WITHDRAWER_ADDRESS,
+				to: MAINNET_ADDRESSES.withdrawer,
 				data: WITHDRAWER_INTERFACE.encodeFunctionData("withdraw", []),
 			});
 
@@ -273,13 +298,17 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
 
 			// withdraw
 			callData.push({
-				to: WITHDRAWER_ADDRESS,
+				to: WITHDRAWER_ADDRESS[
+					gelatoArgs.chainId as keyof typeof WITHDRAWER_ADDRESS
+				],
 				data: WITHDRAWER_INTERFACE.encodeFunctionData("withdraw", []),
 			});
 
 			// bridge
 			callData.push({
-				to: WITHDRAWER_ADDRESS,
+				to: WITHDRAWER_ADDRESS[
+					gelatoArgs.chainId as keyof typeof WITHDRAWER_ADDRESS
+				],
 				data: WITHDRAWER_INTERFACE.encodeFunctionData("bridge", [
 					mimBalanceInDistributor,
 					fee,
@@ -318,11 +347,11 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
 	await storage.set("lastRun", timestamp.toString());
 
 	SimulationUrlBuilder.log(
-		[WITHDRAWER_ADDRESS],
-		[callData[0].to],
-		[0],
-		[callData[0].data],
-		[gelatoArgs.chainId],
+		callData.map(() => GELATO_PROXY),
+		callData.map(({ to }) => to),
+		callData.map(() => 0),
+		callData.map(({ data }) => data),
+		callData.map(() => gelatoArgs.chainId),
 	);
 
 	return {

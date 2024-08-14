@@ -48,7 +48,7 @@ const main = async () => {
 		console.log();
 	}
 
-	const ALTCHAIN_IDS = [250, 43114, 42161];
+	const ALTCHAIN_IDS = [250, 43114, 42161, 81457] as const;
 
 	for (const chainId of ALTCHAIN_IDS) {
 		console.log(`Creating ChainId ${chainId} Task`);
