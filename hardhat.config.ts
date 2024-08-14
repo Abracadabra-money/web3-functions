@@ -15,6 +15,7 @@ const config = {
 			"ethereum",
 			"avalanche",
 			"arbitrum",
+			"blast",
 			"fantom",
 			"optimism",
 			"polygon",
@@ -47,6 +48,11 @@ const config = {
 		arbitrum: {
 			chainId: 42161,
 			url: "https://arb1.arbitrum.io/rpc",
+			accounts: [PRIVATE_KEY],
+		},
+		blast: {
+			chainId: 81457,
+			url: "https://rpc.ankr.com/blast	",
 			accounts: [PRIVATE_KEY],
 		},
 		fantom: {

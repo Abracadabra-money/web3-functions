@@ -6,6 +6,7 @@
 | MagicGlp Arbitrum            | [task](https://app.gelato.network/functions/task/0x46cdddc42edb01fb462cb22efd2578d22351629689b00434531df2e254665279:42161) |
 | MagicGlp Avalanche           | [task](https://app.gelato.network/functions/task/0x36ee967b80c68152c0af1c69d49ff60f0eb41264f3cebc4dcc8b16843c7038be:43114) |
 | SpellSwapper                 | [task](https://app.gelato.network/functions/task/0x9d6f1f55569bf50b6273f4e1b6a75fc64d8cd906d7c401d501f207f19120e3a0:1)     |
+| SpellStaking Blast           | [task](https://app.gelato.network/functions/task/0xd6b36b19af229cc7291882eac23c45741ef962d1f58d9c5b37ef4ff6a5cf12ce:81457) |
 | Velodrome vOP/USDC           | [task](https://app.gelato.network/functions/task/0x1593a557fbbccc9b8c41f175b059eac993a508e9c104036a1bb93f23b1e5d1e1:10)    |
 | WBTC InterestStrategy        | [task](https://app.gelato.network/functions/task/0xdbf9b9d3f40c0c5a44fed95d0d8b1a7ec70882f56e5c3f64a67b4963ca144775:1)     |
 | WETH InterestStrategy        | [task](https://app.gelato.network/functions/task/0x49b5af6155b652aa036b3cf22f798f14384aa4b124cb9780ac3141389b00e311:1)     |
