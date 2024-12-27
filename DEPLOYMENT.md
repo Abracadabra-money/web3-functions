@@ -20,3 +20,4 @@
 | Stargate S\*USDT             | [task](https://app.gelato.network/functions/task/0x37ab785e9a1200fb8bac63b431e36da085b177841b24aa0dfab0a4981122da0a:1)     |
 | GM Strategy Harvester        | [task](https://app.gelato.network/functions/task/0x40d7aadde626b52e7df27bcab3f92c42faf3f137d50fc98dffc79d20c9119314:42161) |
 | Reward Distributor           | [task](https://app.gelato.network/functions/task/0x1b62e611e8e3d87ec8c7ced57230d341802c0ac6c611afb9a9fb4a3c53dc6ac1:42161) |
+| MagicUSD0pp Claimer          | [task](https://app.gelato.network/functions/task/0x746fd28a88217d74f693dd3ec738ce699a174b01a875bce3c023262020048d3e:1)     |
