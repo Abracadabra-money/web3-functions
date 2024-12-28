@@ -21,16 +21,21 @@ const main = async () => {
 
 	const { tx } = await automate.prepareBatchExecTask(
 		{
-			name: "MagicUSD0pp Off-Chain Distribution Claimer",
+			name: "MagicUSD0pp Handler",
 			web3FunctionHash: cid,
 			trigger: {
 				type: TriggerType.TIME,
 				interval: THIRTY_SECONDS,
 			},
 			web3FunctionArgs: {
-				execAddress: "0x75cC0C0DDD2Ccafe6EC415bE686267588011E36A",
-				usualApiEndpoint: "https://app.usual.money/api/rewards",
+				distributionAddress: "0x75cC0C0DDD2Ccafe6EC415bE686267588011E36A",
+				harvesterAddress: "0x0F9af7168CC8819ce3066867509a7F9170fb108B",
 				magicUsd0ppAddress: "0x73075fD1522893D9dC922991542f98F08F2c1C99",
+				usd0ppAddress: "0x35D8949372D46B7a3D5A56006AE77B215fc69bC0",
+				usualAddress: "0xC4441c2BE5d8fA8126822B9929CA0b81Ea0DE38E",
+				usualApiEndpoint: "https://app.usual.money/api",
+				odosApiEndpoint: "https://api.odos.xyz",
+				slippageLimitPercent: 0.1,
 			},
 		},
 		{},
