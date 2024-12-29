@@ -36,6 +36,7 @@ const main = async () => {
 				usualApiEndpoint: "https://app.usual.money/api",
 				odosApiEndpoint: "https://api.odos.xyz",
 				slippageLimitPercent: 0.1,
+				minimumSwapUsd: 1000,
 			},
 		},
 		{},

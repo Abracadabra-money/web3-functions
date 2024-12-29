@@ -29,6 +29,7 @@ const HARVESTER_ABI = parseAbi([
 ]);
 
 const USUAL_DISTRIBUTION_CHALLENGE_PERIOD = 604800n; // 1 week
+const WAD = 10n ** 18n;
 
 type MagicUsd0ppUserArgs = {
 	distributionAddress: Address;
@@ -39,6 +40,7 @@ type MagicUsd0ppUserArgs = {
 	usualApiEndpoint: string;
 	odosApiEndpoint: string;
 	slippageLimitPercent: number;
+	minimumSwapUsd: number;
 };
 
 type OffChainDistribution = {
@@ -60,6 +62,7 @@ Web3Function.onRun(
 			usualApiEndpoint,
 			odosApiEndpoint,
 			slippageLimitPercent,
+			minimumSwapUsd,
 		} = userArgs as MagicUsd0ppUserArgs;
 
 		const client = createJsonRpcPublicClient(multiChainProvider.default());
@@ -100,10 +103,6 @@ Web3Function.onRun(
 				.get(magicUsd0ppAddress)
 				.json<Array<OffChainDistribution>>(),
 		]);
-
-		if (distributions.length === 0) {
-			return { canExec: false, message: "No distributions" };
-		}
 
 		const currentTimestamp = BigInt(Math.floor(Date.now() / 1000));
 		let pendingDistribution:
@@ -170,6 +169,14 @@ Web3Function.onRun(
 				slippageLimitPercent,
 				disableRFQs: true,
 			});
+
+			if (quote.netOutValue < minimumSwapUsd) {
+				return {
+					canExec: false,
+					message: "Insufficient swap output",
+				};
+			}
+
 			callData.push({
 				to: harvesterAddress,
 				data: encodeFunctionData({
@@ -178,7 +185,7 @@ Web3Function.onRun(
 					args: [
 						quote.transaction.to,
 						quote.transaction.data,
-						(quote.outputTokens[0].amount * parseEther("1")) /
+						(quote.outputTokens[0].amount * WAD) /
 							parseEther(`${(100 - slippageLimitPercent) / 100}`),
 					],
 				}),
