@@ -4,8 +4,14 @@
 	"memory": 128,
 	"timeout": 30,
 	"userArgs": {
-		"execAddress": "string",
+		"distributionAddress": "string",
+		"harvesterAddress": "string",
+		"magicUsd0ppAddress": "string",
+		"usd0ppAddress": "string",
+		"usualAddress": "string",
 		"usualApiEndpoint": "string",
-		"magicUsd0ppAddress": "string"
+		"odosApiEndpoint": "string",
+		"slippageLimitBps": "number",
+		"minimumSwapUsd": "number"
 	}
 }
