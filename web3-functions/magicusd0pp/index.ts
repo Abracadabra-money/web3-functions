@@ -185,8 +185,9 @@ Web3Function.onRun(
 					args: [
 						quote.transaction.to,
 						quote.transaction.data,
-						(quote.outputTokens[0].amount * WAD) /
-							parseEther(`${(10_000 - slippageLimitBps) / 10_000}`),
+						(quote.outputTokens[0].amount *
+							parseEther(`${(10_000 - slippageLimitBps) / 10_000}`)) /
+							WAD,
 					],
 				}),
 			});
