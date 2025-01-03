@@ -11,7 +11,7 @@
 		"usualAddress": "string",
 		"usualApiEndpoint": "string",
 		"odosApiEndpoint": "string",
-		"slippageLimitPercent": "number",
+		"slippageLimitBps": "number",
 		"minimumSwapUsd": "number"
 	}
 }

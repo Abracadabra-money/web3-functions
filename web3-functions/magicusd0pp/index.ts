@@ -39,7 +39,7 @@ type MagicUsd0ppUserArgs = {
 	usualAddress: Address;
 	usualApiEndpoint: string;
 	odosApiEndpoint: string;
-	slippageLimitPercent: number;
+	slippageLimitBps: number;
 	minimumSwapUsd: number;
 };
 
@@ -61,7 +61,7 @@ Web3Function.onRun(
 			usualAddress,
 			usualApiEndpoint,
 			odosApiEndpoint,
-			slippageLimitPercent,
+			slippageLimitBps,
 			minimumSwapUsd,
 		} = userArgs as MagicUsd0ppUserArgs;
 
@@ -166,7 +166,7 @@ Web3Function.onRun(
 				inputTokens: [{ tokenAddress: usualAddress, amount: newUsualBalance }],
 				outputTokens: [{ tokenAddress: usd0ppAddress, proportion: 1 }],
 				userAddr: harvesterAddress,
-				slippageLimitPercent,
+				slippageLimitPercent: slippageLimitBps / 100,
 				disableRFQs: true,
 			});
 
@@ -186,7 +186,7 @@ Web3Function.onRun(
 						quote.transaction.to,
 						quote.transaction.data,
 						(quote.outputTokens[0].amount * WAD) /
-							parseEther(`${(100 - slippageLimitPercent) / 100}`),
+							parseEther(`${(10_000 - slippageLimitBps) / 10_000}`),
 					],
 				}),
 			});

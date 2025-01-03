@@ -35,7 +35,7 @@ const main = async () => {
 				usualAddress: "0xC4441c2BE5d8fA8126822B9929CA0b81Ea0DE38E",
 				usualApiEndpoint: "https://app.usual.money/api",
 				odosApiEndpoint: "https://api.odos.xyz",
-				slippageLimitPercent: 0.1,
+				slippageLimitBps: 10,
 				minimumSwapUsd: 1000,
 			},
 		},
