@@ -4,8 +4,6 @@ import { DEVOPS_SAFE } from "../utils/constants";
 
 const { ethers, w3f } = hre;
 
-const THIRTY_SECONDS = 30 * 1000;
-
 const main = async () => {
 	const magicUsd0pp = w3f.get("magicusd0pp");
 
@@ -24,8 +22,7 @@ const main = async () => {
 			name: "MagicUSD0pp Handler",
 			web3FunctionHash: cid,
 			trigger: {
-				type: TriggerType.TIME,
-				interval: THIRTY_SECONDS,
+				type: TriggerType.BLOCK,
 			},
 			web3FunctionArgs: {
 				distributionAddress: "0x75cC0C0DDD2Ccafe6EC415bE686267588011E36A",
