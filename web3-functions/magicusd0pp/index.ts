@@ -173,7 +173,13 @@ Web3Function.onRun(
 			if (quote.netOutValue < minimumSwapUsd) {
 				return {
 					canExec: false,
-					message: "Insufficient swap output",
+					message: `Insufficient swap output: ${quote.netOutValue.toLocaleString(
+						"en-US",
+						{
+							style: "currency",
+							currency: "USD",
+						},
+					)}`,
 				};
 			}
 
