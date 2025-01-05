@@ -2,11 +2,15 @@ import ky from "ky";
 import * as R from "remeda";
 import type { Address, Hex } from "viem";
 
-export type OdosQuoteParameters = {
+export type OdosQuoteParameters<
+	I extends Array<{ tokenAddress: Address; amount: bigint }>,
+	O extends Array<{ tokenAddress: Address; proportion: number }>,
+	C extends number,
+> = {
 	endpoint: string;
-	chainId: number;
-	inputTokens: Array<{ tokenAddress: Address; amount: bigint }>;
-	outputTokens: Array<{ tokenAddress: Address; proportion: number }>;
+	chainId: C;
+	inputTokens: [...I];
+	outputTokens: [...O];
 	userAddr: Address;
 	slippageLimitPercent?: number;
 	disableRFQs?: boolean;
@@ -14,12 +18,16 @@ export type OdosQuoteParameters = {
 	simple?: boolean;
 };
 
-export async function odosQuote(quoteParameters: OdosQuoteParameters) {
+export async function odosQuote<
+	I extends Array<{ tokenAddress: Address; amount: bigint }>,
+	O extends Array<{ tokenAddress: Address; proportion: number }>,
+	C extends number,
+>(quoteParameters: OdosQuoteParameters<I, O, C>) {
 	const odosApi = ky.extend({
 		prefixUrl: quoteParameters.endpoint,
 	});
 
-	const { pathId } = await odosApi
+	const { inValues, pathId } = await odosApi
 		.post("sor/quote/v2", {
 			json: {
 				...R.omit(quoteParameters, ["endpoint"]),
@@ -31,7 +39,10 @@ export async function odosQuote(quoteParameters: OdosQuoteParameters) {
 				),
 			},
 		})
-		.json<{ pathId: string }>();
+		.json<{
+			inValues: { [Index in keyof I]: number };
+			pathId: string;
+		}>();
 
 	const assembledQuote = await odosApi
 		.post("sor/assemble", {
@@ -41,13 +52,24 @@ export async function odosQuote(quoteParameters: OdosQuoteParameters) {
 			},
 		})
 		.json<{
+			deprecated: string | null;
 			blockNumber: number;
 			gasEstimate: number;
 			gasEstimateValue: number;
-			inputTokens: Array<{ tokenAddress: Address; amount: `${bigint}` }>;
-			outputTokens: Array<{ tokenAddress: Address; amount: `${bigint}` }>;
+			inputTokens: {
+				[Index in keyof I]: {
+					tokenAddress: Lowercase<I[Index]["tokenAddress"]>;
+					amount: `${bigint}`;
+				};
+			};
+			outputTokens: {
+				[Index in keyof O]: {
+					tokenAddress: Lowercase<O[Index]["tokenAddress"]>;
+					amount: `${bigint}`;
+				};
+			};
 			netOutValue: number;
-			outValues: number[];
+			outValues: { [Index in keyof O]: `${number}` };
 			transaction: {
 				gas: number;
 				gasPrice: number;
@@ -56,22 +78,29 @@ export async function odosQuote(quoteParameters: OdosQuoteParameters) {
 				from: Address;
 				data: Hex;
 				nonce: number;
-				chainId: number;
+				chainId: C;
 			};
+			simulation: null;
 		}>();
 
 	return {
 		...assembledQuote,
-		inputTokens: assembledQuote.inputTokens.map(({ tokenAddress, amount }) => ({
-			tokenAddress,
-			amount: BigInt(amount),
-		})),
-		outputTokens: assembledQuote.outputTokens.map(
+		inputTokens: R.map(
+			assembledQuote.inputTokens,
 			({ tokenAddress, amount }) => ({
 				tokenAddress,
 				amount: BigInt(amount),
 			}),
 		),
+		outputTokens: R.map(
+			assembledQuote.outputTokens,
+			({ tokenAddress, amount }) => ({
+				tokenAddress,
+				amount: BigInt(amount),
+			}),
+		),
+		inValues,
+		outValues: R.map(assembledQuote.outValues, (value) => Number(value)),
 		transaction: {
 			...assembledQuote.transaction,
 			value: BigInt(assembledQuote.transaction.value),
