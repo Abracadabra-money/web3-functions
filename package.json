@@ -63,29 +63,29 @@
 		]
 	},
 	"devDependencies": {
-		"@biomejs/biome": "^1.8.3",
+		"@biomejs/biome": "^1.9.4",
 		"@foundry-rs/hardhat-anvil": "^0.1.7",
 		"@nomiclabs/hardhat-ethers": "^2.2.3",
-		"@tsconfig/recommended": "^1.0.7",
-		"@types/bun": "latest",
+		"@tsconfig/recommended": "^1.0.8",
+		"@types/bun": "^1.1.14",
 		"@viem/anvil": "^0.0.10",
-		"concurrently": "^8.2.2",
-		"ethereum-waffle": "^3.4.4",
+		"concurrently": "^9.1.2",
 		"ethers": "^5.7.2",
-		"hardhat": "^2.22.6",
-		"husky": "^9.1.1",
-		"lint-staged": "^15.2.7",
+		"hardhat": "^2.22.17",
+		"husky": "^9.1.7",
+		"lint-staged": "^15.3.0",
+		"tevm": "^1.0.0-next.127",
 		"ts-node": "10.9.2",
-		"type-fest": "^4.23.0",
-		"typescript": "5.5.3"
+		"type-fest": "^4.31.0",
+		"typescript": "5.7.2"
 	},
 	"dependencies": {
-		"@gelatonetwork/automate-sdk": "^3.0.19",
+		"@gelatonetwork/automate-sdk": "^3.0.35",
 		"@gelatonetwork/web3-functions-sdk": "^2.4.4",
-		"@urql/core": "^5.0.4",
-		"ky": "^1.4.0",
-		"remeda": "^2.6.0",
-		"viem": "^2.18.0"
+		"@urql/core": "^5.1.0",
+		"ky": "^1.7.4",
+		"remeda": "^2.19.0",
+		"viem": "^2.22.2"
 	},
 	"trustedDependencies": [
 		"@biomejs/biome",
