@@ -74,7 +74,6 @@
 		"hardhat": "^2.22.17",
 		"husky": "^9.1.7",
 		"lint-staged": "^15.3.0",
-		"tevm": "^1.0.0-next.127",
 		"ts-node": "10.9.2",
 		"type-fest": "^4.31.0",
 		"typescript": "5.7.2"
