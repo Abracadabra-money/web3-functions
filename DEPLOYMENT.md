@@ -13,6 +13,8 @@
 | MagicLevel Senior            | [task](https://app.gelato.network/functions/task/0x8e9a7e8f1ee903682f3b70038416a0a8d5deaa28a6e8d933f9712e804b9e6441:56)    |
 | MagicLevel Mezzanine         | [task](https://app.gelato.network/functions/task/0x255dc869c34aa53f8a0d944f458aacf05f37e5ff53eb797d9c8bce1cba399685:56)    |
 | MagicLevel Junior            | [task](https://app.gelato.network/functions/task/0x464be4d56d973a9b8597543d750d45da5cd37970456351c76f45cdfe3fe49de4:56)    |
+| WBTC Negative Interest       | [task](https://app.gelato.network/functions/task/0x433fa642b55991b2a41b01d70ba96e917b06043c8daa4e8e83316e73a5722e00:1)    |
+| WETH Negative Interest       | [task](https://app.gelato.network/functions/task/0x7cb0919327d9c4c740d909c4756d15c7ea5d8bcda177dbc1947e443e29446cfd:1)    |
 | Process Locks MSR Arbitrum   | [task](https://app.gelato.network/functions/task/0x980407fc152de92f9c1730ba58902dee2bfe572cec04efcf6e47e71686b10501:42161) |
 | Process Locks Founders Blast | [task](https://app.gelato.network/functions/task/0xf3fd7d5f917f247bc63413a639c2552e4f66a5f995832c3e8f65d0b735ed01ed:81457) |
 | Distributor Mainnet          | [task](https://app.gelato.network/functions/task/0x4db2dd79637c5942307ebce48b85fa921c9229d3627d8790c1ed4d0052cfb4d2:1)     |
