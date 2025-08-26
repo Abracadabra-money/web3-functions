@@ -10,9 +10,9 @@ import {
 	parseAbi,
 	parseEther,
 } from "viem";
+import { odosQuote } from "../../utils/odos";
 import type { Hex } from "../../utils/types";
 import { createJsonRpcPublicClient } from "../../utils/viem";
-import { type QuoteResponse, zeroExQuote } from "../../utils/zeroEx";
 
 const BIPS = 10_000;
 
@@ -25,27 +25,22 @@ const SWAPPER_ABI = parseAbi([
 
 type SpellSwapperUserArgs = {
 	execAddress: Hex;
-	zeroExApiBaseUrl: string;
+	odosApiEndpoint: string;
 	minimumInputAmount: string;
 	maximumInputAmount: string;
-	minimumOutputAmount: string;
+	maximumPriceImpactBips: number;
 	maximumSwapSlippageBips: number;
 	sellFrequencySeconds: number;
 };
 
 Web3Function.onRun(
-	async ({
-		userArgs,
-		storage,
-		multiChainProvider,
-		secrets,
-	}: Web3FunctionContext) => {
+	async ({ userArgs, storage, multiChainProvider }: Web3FunctionContext) => {
 		const {
 			execAddress,
-			zeroExApiBaseUrl,
+			odosApiEndpoint,
 			minimumInputAmount,
 			maximumInputAmount,
-			minimumOutputAmount,
+			maximumPriceImpactBips,
 			maximumSwapSlippageBips,
 			sellFrequencySeconds,
 		} = userArgs as SpellSwapperUserArgs;
@@ -53,25 +48,15 @@ Web3Function.onRun(
 		const client = createJsonRpcPublicClient(multiChainProvider.default());
 
 		// Retrieve last run timestamp and 0x api key
-		const [lastTimestamp, zeroxApiKey] = await Promise.all([
-			storage
-				.get("lastTimestamp")
-				.then((timestamp) => Number.parseInt(timestamp ?? "0")),
-			secrets.get("ZEROX_API_KEY"),
-		]);
+		const lastTimestamp = await storage
+			.get("lastTimestamp")
+			.then((timestamp) => Number.parseInt(timestamp ?? "0"));
 
 		const timestamp = Math.floor(Date.now() / 1000);
 
 		if (timestamp < lastTimestamp + sellFrequencySeconds) {
 			// Update storage to persist your current state (values must be cast to string)
 			return { canExec: false, message: "Time not elapsed" };
-		}
-
-		if (zeroxApiKey === undefined) {
-			return {
-				canExec: false,
-				message: "ZEROX_API_KEY not set in secrets",
-			};
 		}
 
 		let sellAmount: bigint;
@@ -94,27 +79,34 @@ Web3Function.onRun(
 			return { canExec: false, message: "Rpc call failed" };
 		}
 
-		let quote: QuoteResponse;
+		let quote: Awaited<ReturnType<typeof odosQuote>>;
 		try {
-			quote = await zeroExQuote({
-				endpoint: zeroExApiBaseUrl,
-				apiKey: zeroxApiKey,
-				buyToken: SPELL_ADDRESS,
-				sellToken: MIM_ADDRESS,
-				sellAmount,
-				slippagePercentage: maximumSwapSlippageBips / BIPS,
+			quote = await odosQuote({
+				endpoint: odosApiEndpoint,
+				chainId: multiChainProvider.default().network.chainId,
+				inputTokens: [
+					{ tokenAddress: MIM_ADDRESS, amount: sellAmount },
+				] as const,
+				outputTokens: [{ tokenAddress: SPELL_ADDRESS, proportion: 1 }] as const,
+				userAddr: execAddress,
+				slippageLimitPercent: maximumSwapSlippageBips / 100,
+				disableRFQs: false, // RFQ gives way deeper liquidity for SPELL
 			});
 		} catch (err) {
 			return { canExec: false, message: `Quote Error: ${err}` };
 		}
-		const buyAmount = BigInt(quote.buyAmount);
 
 		console.log(
-			`Swap ${formatEther(sellAmount)} MIM to ${formatEther(buyAmount)} SPELL`,
+			`Swap ${formatEther(sellAmount)} MIM to ${formatEther(quote.outputTokens[0].amount)} SPELL`,
 		);
 
-		if (buyAmount < BigInt(minimumOutputAmount)) {
-			return { canExec: false, message: "Not enough SPELL received" };
+		const priceImpactBps =
+			(1 - quote.netOutValue / R.sum(quote.inValues)) * 10_000;
+		if (priceImpactBps > maximumPriceImpactBips) {
+			return {
+				canExec: false,
+				message: `Too high price impact: ${priceImpactBps} BPS`,
+			};
 		}
 
 		await storage.set("lastTimestamp", timestamp.toString());
@@ -127,7 +119,7 @@ Web3Function.onRun(
 					data: encodeFunctionData({
 						abi: SWAPPER_ABI,
 						functionName: "swapMimForSpell1Inch",
-						args: [quote.to, quote.data],
+						args: [quote.transaction.to, quote.transaction.data],
 					}),
 				},
 			],

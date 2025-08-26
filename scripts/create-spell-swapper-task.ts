@@ -33,10 +33,10 @@ const main = async () => {
 			},
 			web3FunctionArgs: {
 				execAddress: "0xdFE1a5b757523Ca6F7f049ac02151808E6A52111",
-				zeroExApiBaseUrl: "https://api.0x.org",
+				odosApiEndpoint: "https://api.odos.xyz",
 				minimumInputAmount: "1000",
-				maximumInputAmount: "10000",
-				minimumOutputAmount: "100000",
+				maximumInputAmount: "5000",
+				maximumPriceImpactBips: 50,
 				maximumSwapSlippageBips: 25,
 				sellFrequencySeconds: FOUR_HOURS_SECONDS,
 			},
