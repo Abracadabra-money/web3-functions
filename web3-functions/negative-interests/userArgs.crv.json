@@ -1,6 +1,6 @@
 {
 	"execAddress": "0x762d06bB0E45f5ACaEEA716336142a39376E596E",
-	"zeroExApiBaseUrl": "",
+	"odosApiEndpoint": "",
 	"strategyAddress": "0xa5ABd043aaafF2cDb0de3De45a010F0355a1c6E7",
 	"swapToAddress": "",
 	"intervalInSeconds": 43400,

@@ -5,7 +5,7 @@
 	"timeout": 30,
 	"userArgs": {
 		"execAddress": "string",
-		"zeroExApiBaseUrl": "string",
+		"odosApiEndpoint": "string",
 		"intervalInSeconds": "number",
 		"rewardSwappingSlippageInBips": "number",
 		"strategyAddress": "string",
