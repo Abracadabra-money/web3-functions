@@ -2,7 +2,7 @@ import { AutomateSDK, TriggerType } from "@gelatonetwork/automate-sdk";
 import hre from "hardhat";
 import { DEVOPS_SAFE } from "../utils/constants";
 
-const ONE_MINUTE_MILLIS = 60 * 1000;
+const FIVE_MINUTE_MILLIS = 5 * 60 * 1000;
 
 const { ethers, w3f } = hre;
 
@@ -24,10 +24,10 @@ const main = async () => {
 			name: "NegativeInterests: WBTC",
 			web3FunctionArgs: {
 				execAddress: "0x762d06bB0E45f5ACaEEA716336142a39376E596E",
-				zeroExApiBaseUrl: "https://api.0x.org",
+				odosApiEndpoint: "https://api.odos.xyz",
 				strategyAddress: "0x186d76147A226A51a112Bb1958e8b755ab9FD1aF",
 				swapToAddress: "0x99D8a9C45b2ecA8864373A26D1459e3Dff1e17F3",
-				intervalInSeconds: 86400,
+				intervalInSeconds: 1209600,
 				rewardSwappingSlippageInBips: 200,
 				maxBentoBoxAmountIncreaseInBips: 1,
 				maxBentoBoxChangeAmountInBips: 1000,
@@ -39,10 +39,10 @@ const main = async () => {
 			name: "NegativeInterests: WETH",
 			web3FunctionArgs: {
 				execAddress: "0x762d06bB0E45f5ACaEEA716336142a39376E596E",
-				zeroExApiBaseUrl: "https://api.0x.org",
+				odosApiEndpoint: "https://api.odos.xyz",
 				strategyAddress: "0xcc0d7aF1f809dD3A589756Bba36Be04D19e9C6c5",
 				swapToAddress: "0x99D8a9C45b2ecA8864373A26D1459e3Dff1e17F3",
-				intervalInSeconds: 86400,
+				intervalInSeconds: 1209600,
 				rewardSwappingSlippageInBips: 200,
 				maxBentoBoxAmountIncreaseInBips: 1,
 				maxBentoBoxChangeAmountInBips: 1000,
@@ -54,7 +54,7 @@ const main = async () => {
 			name: "NegativeInterests: CRV",
 			web3FunctionArgs: {
 				execAddress: "0x762d06bB0E45f5ACaEEA716336142a39376E596E",
-				zeroExApiBaseUrl: "",
+				odosApiEndpoint: "",
 				strategyAddress: "0xa5ABd043aaafF2cDb0de3De45a010F0355a1c6E7",
 				swapToAddress: "",
 				intervalInSeconds: 43400,
@@ -76,7 +76,7 @@ const main = async () => {
 				web3FunctionHash: cid,
 				trigger: {
 					type: TriggerType.TIME,
-					interval: ONE_MINUTE_MILLIS,
+					interval: FIVE_MINUTE_MILLIS,
 				},
 				web3FunctionArgs: config.web3FunctionArgs,
 			},

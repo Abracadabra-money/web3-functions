@@ -5,6 +5,8 @@ import {
 import { BigNumber, Contract } from "ethers";
 import { Interface } from "ethers/lib/utils";
 import ky from "ky";
+import type { Address } from "viem";
+import { odosQuote } from "../../utils/odos";
 import { SimulationUrlBuilder } from "../../utils/tenderly";
 
 const lensAbi = [
@@ -44,15 +46,15 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
 	const { userArgs, storage, multiChainProvider } = context;
 	const provider = multiChainProvider.default();
 
-	const zeroExApiBaseUrl = userArgs.zeroExApiBaseUrl as string;
+	const odosApiEndpoint = userArgs.odosApiEndpoint as string;
 	const intervalInSeconds = userArgs.intervalInSeconds as number;
-	const swapRewards = zeroExApiBaseUrl.trim() !== "";
+	const swapRewards = odosApiEndpoint.trim() !== "";
 
 	// WBTC strat: 0x186d76147A226A51a112Bb1958e8b755ab9FD1aF
 	// WETH strat: 0xcc0d7aF1f809dD3A589756Bba36Be04D19e9C6c5
 	// CRV strat: 0xa5ABd043aaafF2cDb0de3De45a010F0355a1c6E7
-	const execAddress = userArgs.execAddress as string;
-	const strategyAddress = userArgs.strategyAddress as string;
+	const execAddress = userArgs.execAddress as Address;
+	const strategyAddress = userArgs.strategyAddress as Address;
 	const rewardSwappingSlippageInBips =
 		userArgs.rewardSwappingSlippageInBips as number;
 	const maxBentoBoxAmountIncreaseInBips =
@@ -62,7 +64,7 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
 	const interestAdjusterType = userArgs.interestAdjusterType as string;
 	const interestAdjusterParameters =
 		userArgs.interestAdjusterParameters as string;
-	const swapToAddress = userArgs.swapToAddress as string;
+	const swapToAddress = userArgs.swapToAddress as Address;
 
 	const strategy = new Contract(strategyAddress, strategyAbi, provider);
 	const box = new Contract(await strategy.bentoBox(), boxAbi, provider);
@@ -111,35 +113,20 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
 		totalPendingFees = totalPendingFees.add(BigNumber.from(response));
 
 		if (totalPendingFees.gt(BigNumber.from(0))) {
-			const apiKey = await context.secrets.get("ZEROX_API_KEY");
-			if (!apiKey) {
-				return { canExec: false, message: "ZEROX_API_KEY not set in secrets" };
-			}
-
-			const api = ky.extend({
-				hooks: {
-					beforeRequest: [
-						(request) => {
-							request.headers.set("0x-api-key", apiKey);
-						},
-					],
-				},
+			const quote = await odosQuote({
+				endpoint: odosApiEndpoint,
+				chainId: multiChainProvider.default().network.chainId,
+				inputTokens: [
+					{ tokenAddress: strategyToken, amount: totalPendingFees.toBigInt() },
+				] as const,
+				outputTokens: [{ tokenAddress: swapToAddress, proportion: 1 }] as const,
+				userAddr: strategyAddress,
+				disableRFQs: false,
 			});
 
-			const quoteApi = `${zeroExApiBaseUrl}/swap/v1/quote?buyToken=${swapToAddress}&sellToken=${String(strategyToken)}&sellAmount=${totalPendingFees.toString()}`;
-			// biome-ignore lint/suspicious/noExplicitAny: untyped
-			const quoteApiRes: any = await api.get(quoteApi).json();
+			const toTokenAmount = BigNumber.from(quote.outputTokens[0].amount);
 
-			if (!quoteApiRes) throw Error("Get quote api failed");
-			const quoteResObj = quoteApiRes;
-
-			let value = quoteResObj.buyAmount;
-			if (!value) throw Error("No buyAmount");
-			const toTokenAmount = BigNumber.from(value);
-
-			value = quoteResObj.data;
-			if (!value) throw Error("No data");
-			const data = value.toString();
+			const data = quote.transaction.data;
 
 			const minAmountOut = toTokenAmount.sub(
 				toTokenAmount.mul(rewardSwappingSlippageInBips).div(BIPS),
