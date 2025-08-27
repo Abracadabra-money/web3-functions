@@ -54,7 +54,7 @@
 		"run-task:velodrome-op-usdc": "hardhat w3f-run velodrome-op-usdc --logs --network optimism",
 		"run-task:magicape": "hardhat w3f-run magicape --logs --network ethereum",
 		"run-task:xf33d": "hardhat w3f-run xf33d --logs --network arbitrum",
-		"prepare": "husky && git config --local include.path ../.gitconfig"
+		"prepare": "husky"
 	},
 	"license": "ISC",
 	"lint-staged": {
@@ -68,12 +68,12 @@
 		"@nomiclabs/hardhat-ethers": "^2.2.3",
 		"@tsconfig/recommended": "^1.0.8",
 		"@types/bun": "^1.1.14",
-		"@viem/anvil": "^0.0.10",
 		"concurrently": "^9.1.2",
 		"ethers": "^5.7.2",
 		"hardhat": "^2.22.17",
 		"husky": "^9.1.7",
 		"lint-staged": "^15.3.0",
+		"prool": "^0.0.24",
 		"ts-node": "10.9.2",
 		"type-fest": "^4.31.0",
 		"typescript": "5.7.2"

@@ -8,20 +8,23 @@ import {
 	test,
 } from "bun:test";
 import path from "node:path";
-import type { JsonRpcProvider } from "@ethersproject/providers";
-import type { Anvil } from "@viem/anvil";
+import { JsonRpcProvider } from "@ethersproject/providers";
+import { type DefinePoolReturnType, definePool } from "prool";
+import { anvil } from "prool/instances";
 import type { Merge } from "type-fest";
 import {
+	http,
 	type Address,
-	type Hex,
+	type Chain,
 	type PublicClient,
 	type TestClient,
+	createTestClient,
 	encodeFunctionData,
 	parseAbi,
+	publicActions,
 } from "viem";
 import { ARBITRUM_OPS_SAFE, ARBITRUM_SPELL } from "../utils/constants";
 import { runWeb3Function } from "./utils";
-import { setupAnvil } from "./utils/setupAnvil";
 
 const w3fName = "reward-distributor";
 const w3fRootDir = path.join("web3-functions");
@@ -29,24 +32,43 @@ const w3fPath = path.join(w3fRootDir, w3fName, "index.ts");
 
 setDefaultTimeout(120_000);
 describe("Reward Distributor Web3 Function test", () => {
-	let anvil: Anvil;
 	let provider: JsonRpcProvider;
 	let testClient: Omit<Merge<PublicClient, TestClient>, "mode">;
-	let snapshotId: Hex;
+	let pool: DefinePoolReturnType<number>;
+	let instance: Awaited<ReturnType<DefinePoolReturnType<number>["start"]>>;
 
 	beforeAll(async () => {
-		({ anvil, provider, testClient, snapshotId } = await setupAnvil({
-			forkUrl: process.env.ARBITRUM_RPC_URL,
-			forkBlockNumber: 234134609n,
-		}));
+		pool = definePool({
+			instance: anvil({
+				forkUrl: process.env.ARBITRUM_RPC_URL,
+				forkBlockNumber: 234134609n,
+				blockBaseFeePerGas: 0n,
+				gasPrice: 0n,
+			}),
+		});
+
+		instance = await pool.start(0);
+		const anvilEndpoint = `http://${instance.host}:${instance.port}`;
+		provider = new JsonRpcProvider(anvilEndpoint);
+		testClient = createTestClient({
+			chain: {
+				contracts: {
+					multicall3: {
+						address: "0xcA11bde05977b3631167028862bE2a173976CA11",
+					},
+				},
+			} as unknown as Chain,
+			transport: http(anvilEndpoint),
+			mode: "anvil",
+		}).extend(publicActions);
 	});
 
 	afterAll(async () => {
-		await anvil.stop();
+		await pool.stopAll();
 	});
 
 	afterEach(async () => {
-		await testClient.revert({ id: snapshotId });
+		await instance.restart();
 	});
 
 	const run = async () =>
