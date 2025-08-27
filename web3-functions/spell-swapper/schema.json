@@ -5,10 +5,10 @@
 	"timeout": 30,
 	"userArgs": {
 		"execAddress": "string",
-		"zeroExApiBaseUrl": "string",
+		"odosApiEndpoint": "string",
 		"minimumInputAmount": "string",
 		"maximumInputAmount": "string",
-		"minimumOutputAmount": "string",
+		"maximumPriceImpactBips": "number",
 		"maximumSwapSlippageBips": "number",
 		"sellFrequencySeconds": "number"
 	}
